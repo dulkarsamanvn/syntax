@@ -1,15 +1,21 @@
+import axios from 'axios';
 import React from 'react'
 import { useNavigate } from 'react-router-dom';
 
 function Home() {
   const navigate=useNavigate()
-  const handleLogout=()=>{
-    localStorage.removeItem('emailForOtp');
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('username');
-    navigate('/login')
+  const handleLogout=async()=>{
+    try{
+      await axios.post('http://localhost:8000/logout/',{},{withCredentials:true})
+    }catch(error){
+      console.error('Logout Failed',error)
+    }finally{
+      localStorage.removeItem('emailForOtp');
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('username');
+      navigate('/login')
+    }
+   
   }
   return (
     <div>

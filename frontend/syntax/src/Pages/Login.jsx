@@ -12,9 +12,8 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault()
     try {
-      const response = await axios.post("http://localhost:8000/login/", { email, password })
-      localStorage.setItem("access_token", response.data.access)
-      localStorage.setItem("refresh_token", response.data.refresh)
+      const response = await axios.post("http://localhost:8000/login/", { email, password },{withCredentials:true})
+      
       localStorage.setItem("username", response.data.username)
       localStorage.setItem('isAuthenticated','true')
       setMessage("Login Successful")

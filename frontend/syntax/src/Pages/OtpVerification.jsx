@@ -25,7 +25,7 @@ function OtpVerification() {
     e.preventDefault()
     const otpString = otp.join("")
     try {
-      const response = await axios.post("http://localhost:8000/verify_otp/", { email, otp: otpString })
+      const response = await axios.post("http://localhost:8000/verify_otp/", { email, otp: otpString },{withCredentials:true})
       setMessage(response.data.message)
       localStorage.setItem('isAuthenticated','true')//imp
       localStorage.removeItem('emailForOtp')//imp
@@ -40,7 +40,7 @@ function OtpVerification() {
   const handleResend = async () => {
     try {
       console.log("Email for resend:", email)
-      const response = await axios.post("http://localhost:8000/resend_otp/", { email })
+      const response = await axios.post("http://localhost:8000/resend_otp/", { email },{withCredentials:true})
       setMessage(response.data.message)
       setCooldown(60)
     } catch (error) {

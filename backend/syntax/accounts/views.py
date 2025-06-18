@@ -9,7 +9,9 @@ from django.core.mail import send_mail
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken,TokenError
+from django.http import JsonResponse
+
 
 
 class SignupView(APIView):
@@ -93,11 +95,8 @@ class LoginView(APIView):
         email=request.data.get('email')
         password=request.data.get('password')
 
-        print(f"Trying to authenticate user with email={email}")
-
         user=authenticate(username=email,password=password)
         if user is not None:
-            print(f"User authenticated: {user}, Verified: {user.is_verified}")
             if not user.is_verified:
                 last_otp=OTP.objects.filter(user=user).last()
                 if last_otp and (timezone.now()-last_otp.created_at).seconds <60:
@@ -116,10 +115,56 @@ class LoginView(APIView):
                 )
                 return Response({'detail':'Email not verified. A new OTP has been sent to your email.'},status=status.HTTP_403_FORBIDDEN)
             refresh=RefreshToken.for_user(user)
-            return Response({
-                'access':str(refresh.access_token),
-                'refresh':str(refresh),
-                'username':user.username
-            },status=status.HTTP_200_OK)
+            access_token=str(refresh.access_token)
+            refresh_token=str(refresh)
+
+            response=JsonResponse({'message':'Login successful','username':user.username})
+            response.set_cookie(
+                key='access_token',
+                value=access_token,
+                httponly=True,
+                secure=True,
+                samesite='Lax',
+                max_age=60 * 5
+            )
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh_token,
+                httponly=True,
+                secure=True,
+                samesite='Lax',
+                max_age=60 * 60 * 24 * 7
+
+            )
+            return response
         else:
             return Response({'detail':'Invalid Credentials'},status=status.HTTP_401_UNAUTHORIZED)
+
+
+class LogoutView(APIView):
+    def post(self,request):
+        response=JsonResponse({'message':'Logout Successful'})
+        response.delete_cookie('access_token')
+        response.delete_cookie('refresh_token')
+        return response
+
+class RefreshTokenView(APIView):
+    def post(self,request):
+        refresh_token=request.COOKIES.get('refresh_token')
+        if refresh_token is None:
+            return Response({'detail':'Refresh Token Missing'},status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            refresh=RefreshToken(refresh_token)
+            access_token=str(refresh.access_token)
+            response=JsonResponse({'message':'Token Refreshed'})
+            response.set_cookie(
+                key='access_token',
+                value=access_token,
+                httponly=True,
+                secure=True,
+                samesite='Lax',
+                max_age=60 * 5
+            )
+            return response
+        except TokenError:
+            return Response({'detail':'Invalid refresh token'},status=status.HTTP_403_FORBIDDEN)
