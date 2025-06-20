@@ -11,6 +11,8 @@ from rest_framework import status
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken,TokenError
 from django.http import JsonResponse
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
 
 
@@ -168,3 +170,88 @@ class RefreshTokenView(APIView):
             return response
         except TokenError:
             return Response({'detail':'Invalid refresh token'},status=status.HTTP_403_FORBIDDEN)
+
+
+class GoogleLoginView(APIView):
+    def post(self,request):
+        token=request.data.get('token')
+        if not token:
+            return Response({'error': 'Token is required'},status=status.HTTP_400_BAD_REQUEST)
+        try:
+            idinfo=id_token.verify_oauth2_token(token,requests.Request(),settings.GOOGLE_CLIENT_ID)
+            email=idinfo['email']
+            name=idinfo.get('name','')
+
+            user,created=User.objects.get_or_create(email=email,defaults={
+                'username': email.split('@')[0],
+                'is_verified': True
+            })
+
+            refresh=RefreshToken.for_user(user)
+            access_token=str(refresh.access_token)
+            refresh_token=str(refresh)
+            response=JsonResponse({'message': 'Login successful'})
+
+            response.set_cookie(
+                key='access_token',
+                value=access_token,
+                httponly=True,
+                secure=True,
+                samesite='Lax',
+                max_age= 60 * 5
+
+            )
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh_token,
+                httponly=True,
+                secure=True,
+                samesite='Lax',
+                max_age=60 * 60 * 24 * 7
+            )
+            return response
+        except ValueError as e:
+            return Response({'error': 'Invalid token', 'details': str(e)},status=status.HTTP_400_BAD_REQUEST)
+        
+
+class AdminLoginView(APIView):
+    def post(self,request):
+        email=request.data.get('email')
+        password=request.data.get('password')
+
+        print("Email received:", email)
+        print("Password received:", password)
+
+        user=authenticate(username=email,password=password)
+        print("Authenticated user:", user)
+
+        if not user:
+            return Response({'detail':'Invalid Credentials'},status=status.HTTP_401_UNAUTHORIZED)
+        if not user.is_staff:
+            return Response({'detail':'Not Authorized as Admin'},status=status.HTTP_403_FORBIDDEN)
+        refresh=RefreshToken.for_user(user)
+        access_token=str(refresh.access_token)
+        refresh_token=str(refresh)
+
+        response=JsonResponse({
+            'message':'Admin Login Successful',
+            'username':user.username,
+            'email':user.email
+        })
+        response.set_cookie(
+            key='access_token',
+            value=access_token,
+            httponly=True,
+            secure=True,
+            samesite='Lax',
+            max_age=60 * 5
+        )
+        response.set_cookie(
+            key='refresh_token',
+            value=refresh_token,
+            httponly=True,
+            secure=True,
+            samesite='Lax',
+            max_age=60 * 60 * 24 * 7
+        )
+        return response

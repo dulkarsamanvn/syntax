@@ -7,6 +7,10 @@ import ProtectedRoute from './components/ProtectedRoute'
 import PublicRoute from './components/PublicRoute'
 import OTPRoute from './components/OTPRoute'
 import Home from './Pages/Home'
+import AdminLogin from './Pages/Admin/AdminLogin'
+import AdminDashboard from './Pages/Admin/AdminDashboard'
+import AdminPublicRoute from './components/AdminPublicRoute'
+import AdminProtectedRoute from './components/AdminProtectedRoute'
 
 function App() {
   return (
@@ -28,6 +32,17 @@ function App() {
           element={<ProtectedRoute>
             <Home />
           </ProtectedRoute>} />
+        
+        <Route path='/adminlogin' element={
+          <AdminPublicRoute>
+            <AdminLogin/>
+          </AdminPublicRoute>} />
+
+        <Route path='/admin-dashboard' element={
+          <AdminProtectedRoute>
+            <AdminDashboard/>
+          </AdminProtectedRoute>} />
+
       </Routes>
     </Router>
   )
