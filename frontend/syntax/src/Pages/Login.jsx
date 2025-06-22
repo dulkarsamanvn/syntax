@@ -13,43 +13,63 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault()
     try {
-      const response = await axios.post("http://localhost:8000/login/", { email, password },{withCredentials:true})
-      
+      const response = await axios.post("http://localhost:8000/login/", { email, password }, { withCredentials: true })
+
       localStorage.setItem("username", response.data.username)
-      localStorage.setItem('isAuthenticated','true')
+      localStorage.setItem('isAuthenticated', 'true')
       setMessage("Login Successful")
       navigate("/home")
     } catch (error) {
       console.log("Error response:", error.response)
       const detail = error.response?.data?.detail
-      if (detail == "Email not verified. A new OTP has been sent to your email.") {
+      if (detail === "Email not verified. A new OTP has been sent to your email.") {
         localStorage.setItem("emailForOtp", email)
         setMessage("New OTP sent")
         setTimeout(() => {
           navigate("/verify-otp")
         }, 1000)
+      } else if (detail === "You have been blocked by the admin.") {
+        setMessage("You have been blocked by the admin.")
       } else {
         setMessage(detail || "Login Failed")
       }
     }
   }
 
-  const handleSuccess=async(credentialResponse)=>{
-    const token=credentialResponse.credential;
-    try{
-      const res=await axios.post('http://localhost:8000/google/',{token},{withCredentials:true})
-      console.log('Login Success',res.data)
+
+  const handleSuccess = async (credentialResponse) => {
+    const token = credentialResponse.credential;
+    try {
+      const res = await axios.post('http://localhost:8000/google/', { token }, { withCredentials: true })
+      console.log('Login Success', res.data)
       localStorage.setItem("username", res.data.username)
-      localStorage.setItem('isAuthenticated','true')
+      localStorage.setItem('isAuthenticated', 'true')
       setMessage("Login Successful")
       navigate("/home")
 
-    }catch(error){
-      console.error('Login Error:', error.response?.data || error.message)
+    } catch (error) {
+
+      const detail = error.response?.data?.detail
+      const errorMessage = error.response?.data?.error
+
+      if (error.response?.status === 403) {
+        console.log('403 status detected - user blocked')
+        setMessage(detail || "You have been blocked by the admin.");
+      }
+
+      else if (errorMessage === "Invalid token") {
+        setMessage("Invalid or expired Google token.");
+      }
+      else if (detail) {
+        setMessage(detail);
+      }
+      else {
+        setMessage("Google Login Failed. Please try again.");
+      }
     }
   }
 
-  const handleError=()=>{
+  const handleError = () => {
     console.log('Google login failed');
   }
 
@@ -71,7 +91,7 @@ function Login() {
               />
             </div> */}
 
-             <GoogleLogin
+            <GoogleLogin
               onSuccess={handleSuccess}
               onError={handleError}
               render={(renderProps) => (
@@ -137,11 +157,10 @@ function Login() {
           {/* Message */}
           {message && (
             <div
-              className={`mt-4 p-3 rounded-lg text-sm text-center ${
-                message.includes("Successful") || message.includes("sent")
-                  ? "bg-green-900/50 text-green-300 border border-green-700/50"
-                  : "bg-red-900/50 text-red-300 border border-red-700/50"
-              }`}
+              className={`mt-4 p-3 rounded-lg text-sm text-center ${message.includes("Successful") || message.includes("sent")
+                ? "bg-green-900/50 text-green-300 border border-green-700/50"
+                : "bg-red-900/50 text-red-300 border border-red-700/50"
+                }`}
             >
               {message}
             </div>

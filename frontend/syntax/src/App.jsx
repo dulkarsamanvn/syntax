@@ -3,14 +3,15 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Signup from './Pages/Signup'
 import OtpVerification from './Pages/OtpVerification'
 import Login from './Pages/Login'
-import ProtectedRoute from './components/ProtectedRoute'
-import PublicRoute from './components/PublicRoute'
-import OTPRoute from './components/OTPRoute'
+import ProtectedRoute from './routes/ProtectedRoute'
+import PublicRoute from './routes/PublicRoute'
+import OTPRoute from './routes/OTPRoute'
 import Home from './Pages/Home'
 import AdminLogin from './Pages/Admin/AdminLogin'
 import AdminDashboard from './Pages/Admin/AdminDashboard'
-import AdminPublicRoute from './components/AdminPublicRoute'
-import AdminProtectedRoute from './components/AdminProtectedRoute'
+import AdminPublicRoute from './routes/AdminPublicRoute'
+import AdminProtectedRoute from './routes/AdminProtectedRoute'
+import UserManagement from './Pages/Admin/UserManagement'
 
 function App() {
   return (
@@ -38,10 +39,17 @@ function App() {
             <AdminLogin/>
           </AdminPublicRoute>} />
 
-        <Route path='/admin-dashboard' element={
+        <Route path='/admin/dashboard' element={
           <AdminProtectedRoute>
             <AdminDashboard/>
           </AdminProtectedRoute>} />
+
+        <Route path='/admin/user-management' element={
+          <AdminProtectedRoute>
+            <UserManagement/>
+          </AdminProtectedRoute>} />
+        
+
 
       </Routes>
     </Router>

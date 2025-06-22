@@ -20,10 +20,10 @@ function AdminLogin() {
       localStorage.setItem("isAdmin", "true")
       localStorage.setItem("username", response.data.username)
       setMessage("Login Successful")
-      navigate("/admin-dashboard")
+      navigate("/admin/dashboard")
     } catch (error) {
       const detail = error.response?.data?.detail || "Login Failed"
-      setMessage("Admin Login Failed: " + detail)
+      setMessage(detail)
     }
   }
 

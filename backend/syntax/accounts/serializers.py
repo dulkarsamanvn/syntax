@@ -10,3 +10,9 @@ class SignupSerializer(serializers.ModelSerializer):
 
     def create(self,validated_data):
         return User.objects.create_user(**validated_data)
+
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=User
+        fields=['username','email','id','is_active']

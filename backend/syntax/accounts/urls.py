@@ -1,5 +1,5 @@
 from django.urls import path
-from accounts.views import SignupView,VerifyOTPView,ResendOTPView,LoginView,LogoutView,RefreshTokenView,GoogleLoginView,AdminLoginView
+from accounts.views import SignupView,VerifyOTPView,ResendOTPView,LoginView,LogoutView,RefreshTokenView,GoogleLoginView,AdminLoginView,AdminUserManagementView,AdminBlockUserView
 
 urlpatterns = [
     path('signup/',SignupView.as_view(),name='signup'),
@@ -10,5 +10,7 @@ urlpatterns = [
     path('refresh-token/',RefreshTokenView.as_view(),name='refresh-token'),
     path('google/',GoogleLoginView.as_view(),name='google-login'),
     path('adminlogin/',AdminLoginView.as_view(),name='adminlogin'),
+    path('user-management',AdminUserManagementView.as_view(),name='user-management'),
+    path('user-management/<int:id>/block',AdminBlockUserView.as_view(),name='block-user'),
 
 ]
