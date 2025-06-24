@@ -3,6 +3,8 @@ from django.contrib.auth.models import BaseUserManager,AbstractBaseUser,Permissi
 from django.utils import timezone
 from datetime import timedelta
 import random
+from cloudinary.models import CloudinaryField
+from user_profile.models import Level
 
 # Create your models here.
 class UserManager(BaseUserManager):
@@ -31,6 +33,8 @@ class User(AbstractBaseUser,PermissionsMixin):
     current_streak=models.IntegerField(default=0)
     longest_streak=models.IntegerField(default=0)
     is_premium=models.BooleanField(default=False)
+    profile_photo=CloudinaryField('image',blank=True,null=True)
+    level=models.ForeignKey(Level,on_delete=models.SET_NULL,null=True,blank=True)
 
     is_staff=models.BooleanField(default=False)
     is_superuser=models.BooleanField(default=False)
@@ -44,6 +48,42 @@ class User(AbstractBaseUser,PermissionsMixin):
 
     def __str__(self):
         return self.email
+    
+    def get_rank(self):
+        return User.objects.filter(xp__gt=self.xp).count() +1
+    
+    def check_level_up(self):
+        levels=Level.objects.order_by('xp_threshold')
+        for level in levels:
+            if self.xp >= level.xp_threshold:
+                self.level=level
+        self.save()
+    
+    def compute_rank(self):
+        if self.level and self.level.number >=15:
+            return 'Platinum'
+        elif self.level and self.level.number >=10:
+            return 'Gold'
+        elif self.level and self.level.number >=5:
+            return 'Silver'
+        return 'Bronze'
+
+    def get_next_level_info(self):
+        next_level=Level.objects.filter(xp_threshold__gt=self.xp).order_by('xp_threshold').first()
+        if next_level:
+            xp_needed=next_level.xp_threshold - self.xp
+            return {
+                "next_level": next_level.number,
+                "xp_for_next_level": next_level.xp_threshold,
+                "xp_needed": xp_needed
+            }
+        return {
+                "next_level": None,
+                "xp_for_next_level": None,
+                "xp_needed": 0
+            }
+        
+
 
 # -----------------------------------------------------------------
 

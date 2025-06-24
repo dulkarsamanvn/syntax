@@ -12,6 +12,9 @@ import AdminDashboard from './Pages/Admin/AdminDashboard'
 import AdminPublicRoute from './routes/AdminPublicRoute'
 import AdminProtectedRoute from './routes/AdminProtectedRoute'
 import UserManagement from './Pages/Admin/UserManagement'
+import UserProfile from './Pages/UserProfile'
+import Settings from './Pages/Settings'
+import EditProfile from './Pages/EditProfile'
 
 function App() {
   return (
@@ -48,8 +51,22 @@ function App() {
           <AdminProtectedRoute>
             <UserManagement/>
           </AdminProtectedRoute>} />
-        
 
+        <Route path='/profile' element={
+          <ProtectedRoute>
+            <UserProfile/>
+          </ProtectedRoute>} />
+        
+        <Route path='/settings' element={
+          <ProtectedRoute>
+            <Settings/>
+          </ProtectedRoute>} />
+        
+        <Route path='/edit-profile' element={
+          <ProtectedRoute>
+            <EditProfile/>
+          </ProtectedRoute>} />
+        
 
       </Routes>
     </Router>

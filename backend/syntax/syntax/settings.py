@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import cloudinary
 from decouple import config
 from datetime import timedelta
 # from decouple
@@ -44,7 +45,11 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
 
+    'cloudinary',
+    'cloudinary_storage',
+
     'accounts',
+    'user_profile',
 ]
 
 MIDDLEWARE = [
@@ -178,3 +183,17 @@ SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
 
 GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID')
+
+
+cloudinary.config(
+    cloud_name=config("CLOUDINARY_CLOUD_NAME"),
+    api_key=config("CLOUDINARY_API_KEY"),
+    api_secret=config("CLOUDINARY_API_SECRET")
+)
+
+print("Cloud Name:", config('CLOUDINARY_CLOUD_NAME'))
+print("API Key:", config('CLOUDINARY_API_KEY'))
+print("API Secret:", config('CLOUDINARY_API_SECRET'))
+
+
+
