@@ -12,6 +12,29 @@ function Signup() {
 
   const handleSignup = async (e) => {
     e.preventDefault()
+    if (!username) {
+      setMessage("Email is required");
+      return
+    }
+    if (!email) {
+      setMessage('Email is required')
+      return
+    }
+    if (!password) {
+      setMessage('password is required')
+      return
+    }
+    const usernameRegex = /^[a-zA-Z0-9_]+$/;
+    if (!usernameRegex.test(username)) {
+      setMessage('Username can only contain letters, numbers, and underscores.')
+      return;
+    }
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setMessage("Password must be at least 8 characters, include 1 uppercase letter and 1 special character.")
+      return;
+    }
+
     try {
       const response = await axios.post("http://localhost:8000/signup/", {
         email,
@@ -26,7 +49,19 @@ function Signup() {
       }, 1000)
     } catch (error) {
       console.error(error, "signup failed")
-      setMessage("Signup failed. Please try again.")
+      const response = error.response;
+
+      if (response?.data?.username) {
+        setMessage(`Username: ${response.data.username[0]}`);
+      } else if (response?.data?.email) {
+        setMessage(`Email: ${response.data.email[0]}`);
+      } else if (response?.data?.password) {
+        setMessage(`Password: ${response.data.password[0]}`);
+      } else if (response?.data?.detail) {
+        setMessage(response.data.detail);
+      } else {
+        setMessage("Signup failed. Please try again.");
+      }
     }
   }
 
@@ -89,8 +124,8 @@ function Signup() {
           {message && (
             <div
               className={`mt-4 p-3 rounded-lg text-sm text-center ${message.includes("successful")
-                  ? "bg-green-900/50 text-green-300 border border-green-700/50"
-                  : "bg-red-900/50 text-red-300 border border-red-700/50"
+                ? "bg-green-900/50 text-green-300 border border-green-700/50"
+                : "bg-red-900/50 text-red-300 border border-red-700/50"
                 }`}
             >
               {message}

@@ -15,6 +15,7 @@ import UserManagement from './Pages/Admin/UserManagement'
 import UserProfile from './Pages/UserProfile'
 import Settings from './Pages/Settings'
 import EditProfile from './Pages/EditProfile'
+import ChallengeList from './Pages/Admin/Challenges/ChallengeList'
 
 function App() {
   return (
@@ -66,6 +67,13 @@ function App() {
           <ProtectedRoute>
             <EditProfile/>
           </ProtectedRoute>} />
+
+        <Route path='/admin/challenge-management' element={
+          <AdminProtectedRoute>
+            <ChallengeList/>
+          </AdminProtectedRoute>} />
+        
+        
         
 
       </Routes>

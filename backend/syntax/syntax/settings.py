@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 
     'accounts',
     'user_profile',
+    'challenge'
 ]
 
 MIDDLEWARE = [
@@ -191,9 +192,7 @@ cloudinary.config(
     api_secret=config("CLOUDINARY_API_SECRET")
 )
 
-print("Cloud Name:", config('CLOUDINARY_CLOUD_NAME'))
-print("API Key:", config('CLOUDINARY_API_KEY'))
-print("API Secret:", config('CLOUDINARY_API_SECRET'))
+
 
 
 

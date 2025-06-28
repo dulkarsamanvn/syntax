@@ -12,6 +12,19 @@ function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault()
+    if(!email){
+      setMessage("Email is required")
+      return
+    }
+    if(!password){
+      setMessage("Password is required")
+      return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setMessage("Enter a valid email address")
+      return
+    }
     try {
       const response = await axios.post("http://localhost:8000/login/", { email, password }, { withCredentials: true })
 

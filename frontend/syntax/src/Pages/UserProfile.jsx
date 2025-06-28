@@ -128,7 +128,7 @@ function UserProfile() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white">
       {/* Top Navigation Bar */}
-      <nav className="border-b border-slate-700/50 px-4 md:px-6 py-4 bg-slate-900/90 backdrop-blur-sm">
+      <nav className="border-b border-slate-700/50 px-4 md:px-6 py-4 bg-slate-900/95 backdrop-blur-xl shadow-2xl sticky top-0 z-50">
         <div className="flex items-center justify-between">
           {/* Left side - Logo */}
           <button onClick={handleRedirect}>
@@ -204,7 +204,11 @@ function UserProfile() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="text-4xl">🧙‍♂️</div>
+                  <img
+                    src='https://img.freepik.com/free-vector/cute-girl-hacker-operating-laptop-cartoon-vector-icon-illustration-people-technology-isolated-flat_138676-9487.jpg?semt=ais_hybrid&w=740'
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
                 )}
               </div>
             </div>

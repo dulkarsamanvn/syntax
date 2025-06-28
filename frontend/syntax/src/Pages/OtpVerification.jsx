@@ -1,6 +1,6 @@
 import axios from "axios"
 import React from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useState,useRef } from "react"
 import { useNavigate } from "react-router-dom"
 
 function OtpVerification() {
@@ -9,6 +9,8 @@ function OtpVerification() {
   const [message, setMessage] = useState("")
   const email = localStorage.getItem("emailForOtp")
   const navigate = useNavigate()
+
+  const inputRefs=useRef([])
 
   useEffect(() => {
     let timer;
@@ -21,9 +23,32 @@ function OtpVerification() {
     return () => clearInterval(timer)
   }, [cooldown])
 
+  const handleChange=(value,index)=>{
+    if (!/^\d?$/.test(value)) return;
+    const newOtp=[...otp]
+    newOtp[index]=value
+    setOtp(newOtp)
+
+    if (value && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  }
+
+  const handleKeyDown=(e,index)=>{
+    if(e.key === "Backspace" && !otp[index] && index > 0){
+      inputRefs.current[index - 1]?.focus();
+    }
+  }
+
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     const otpString = otp.join("")
+    if(otpString.length !==6 || otp.some((digit)=>digit === '')){
+      setMessage("Please enter all 6 digits of the OTP.")
+      return
+    }
+
     try {
       const response = await axios.post("http://localhost:8000/verify_otp/", { email, otp: otpString },{withCredentials:true})
       setMessage(response.data.message)
@@ -69,14 +94,14 @@ function OtpVerification() {
                 {otp.map((digit, index) => (
                   <input
                     key={index}
+                    id={`otp-${index}`}
                     type="text"
+                    inputMode="numeric"
                     maxLength={1}
                     value={digit}
-                    onChange={(e) => {
-                      const newOtp = [...otp]
-                      newOtp[index] = e.target.value
-                      setOtp(newOtp)
-                    }}
+                    ref={(el) => (inputRefs.current[index] = el)}
+                    onChange={(e) => handleChange(e.target.value, index)}
+                    onKeyDown={(e) => handleKeyDown(e, index)}
                     className="w-12 h-12 bg-slate-700/50 border-2 border-white rounded-lg text-white text-center text-xl font-semibold focus:border-blue-400 focus:outline-none transition-colors duration-200"
                   />
                 ))}
