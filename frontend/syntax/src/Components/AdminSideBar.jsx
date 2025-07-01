@@ -20,7 +20,7 @@ const menuItems = [
   { name: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
   { name: "Users Management", icon: Users, path: "/admin/user-management" },
   { name: "Challenge Management", icon: Trophy, path: "/admin/challenge-management" },
-  { name: "Level Management", icon: BarChart3, path: "#" },
+  { name: "Level Management", icon: BarChart3, path: "/admin/level-management" },
   { name: "Plans Management", icon: CreditCard, path: "#" },
   { name: "Report Management", icon: FileText, path: "#" },
   { name: "Group Management", icon: UserCheck, path: "#" },

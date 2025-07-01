@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from accounts.models import User
+from user_profile.models import Level
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -41,3 +42,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if obj.profile_photo:
             return obj.profile_photo.url
         return None
+
+
+
+class LevelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Level
+        fields='__all__'

@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.conf import settings
 
 # Create your models here.
 class Challenge(models.Model):
@@ -40,3 +41,18 @@ class Challenge(models.Model):
     def __str__(self):
         return self.title
     
+
+class Submission(models.Model):
+    user=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
+    challenge=models.ForeignKey(Challenge,on_delete=models.CASCADE)
+    code=models.TextField()
+    language=models.CharField(max_length=30)
+    is_completed=models.BooleanField(default=False)
+    passed_test_cases=models.PositiveIntegerField(default=0)
+    total_test_cases=models.PositiveIntegerField(default=0)
+    runtime=models.FloatField(null=True, blank=True, help_text="Time taken in seconds")
+    xp_awarded = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering=['-created_at']

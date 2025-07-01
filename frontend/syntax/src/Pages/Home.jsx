@@ -12,6 +12,7 @@ import {
   BarChart3,
   Sparkles,
   ArrowRight,
+  CircleCheck
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
@@ -218,11 +219,10 @@ export default function Home() {
                 {["All", "JavaScript", "Python", "Algorithm", "Network", "Database", "Shell"].map((tag, index) => (
                   <button
                     key={tag}
-                    className={`px-4 md:px-6 py-2.5 rounded-full text-sm md:text-base font-medium transition-all duration-200 ${
-                      index === 0
-                        ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/25 transform scale-105"
-                        : "bg-slate-700/80 text-slate-300 hover:bg-slate-600/80 hover:text-white hover:shadow-lg hover:scale-105 border border-slate-600/50"
-                    }`}
+                    className={`px-4 md:px-6 py-2.5 rounded-full text-sm md:text-base font-medium transition-all duration-200 ${index === 0
+                      ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/25 transform scale-105"
+                      : "bg-slate-700/80 text-slate-300 hover:bg-slate-600/80 hover:text-white hover:shadow-lg hover:scale-105 border border-slate-600/50"
+                      }`}
                   >
                     {tag}
                   </button>
@@ -238,23 +238,25 @@ export default function Home() {
                   {challenges.map((challenge, index) => (
                     <div
                       key={index}
-                      className="group bg-gradient-to-br from-slate-800/90 to-slate-700/80 rounded-xl p-6 border border-slate-600/30 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:border-slate-500/50 backdrop-blur-sm"
+                      className="relative group bg-gradient-to-br from-slate-800/90 to-slate-700/80 rounded-xl p-6 border border-slate-600/30 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:border-slate-500/50 backdrop-blur-sm"
                     >
+
+
+
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-2">
                           <span
-                            className={`text-xs px-3 py-1.5 rounded-full font-semibold shadow-md ${
-                              challenge.difficulty === "easy"
-                                ? "bg-gradient-to-r from-green-600 to-green-700"
-                                : challenge.difficulty === "medium"
-                                  ? "bg-gradient-to-r from-yellow-600 to-orange-600"
-                                  : "bg-gradient-to-r from-red-600 to-red-700"
-                            }`}
+                            className={`text-xs px-3 py-1.5 rounded-full font-semibold shadow-md ${challenge.difficulty === "easy"
+                              ? "bg-gradient-to-r from-teal-600 to-teal-700"
+                              : challenge.difficulty === "medium"
+                                ? "bg-gradient-to-r from-yellow-600 to-orange-600"
+                                : "bg-gradient-to-r from-red-600 to-red-700"
+                              }`}
                           >
                             {challenge.difficulty?.toUpperCase()}
                           </span>
                         </div>
-                        <span className="text-xs text-slate-400 bg-slate-700/50 px-2 py-1 rounded-lg">
+                        <span className="text-xs text-slate-400 bg-slate-700/50 px-2 py-1 mt-3 rounded-lg">
                           {challenge.time_limit} Minutes
                         </span>
                       </div>
@@ -262,6 +264,20 @@ export default function Home() {
                       <h4 className="font-bold mb-3 text-lg text-white group-hover:text-blue-300 transition-colors duration-200">
                         {challenge.title}
                       </h4>
+
+                      {/* {challenge.is_completed && (
+                        <div className="inline-block mb-3 px-3 py-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs rounded-full font-medium shadow-md">
+                          Completed
+                        </div>
+                      )} */}
+                      {challenge.is_completed && (
+                        <div className="absolute -top-2 -right-2 px-3 py-1 bg-gray-700 text-green-400 text-xs rounded-full font-medium shadow-md z-10 flex items-center space-x-1.5 border border-gray-600">
+                          <span className="text-white">Solved</span>
+                          <div className="flex items-center justify-center w-4 h-4  rounded-full">
+                            <CircleCheck className="w-5 h-3.5 text-green" strokeWidth={3} />
+                          </div>
+                        </div>
+                      )}
 
                       <p className="text-sm text-slate-400 mb-4 line-clamp-2 leading-relaxed truncate overflow-hidden whitespace-nowrap">
                         {challenge.description}
@@ -286,11 +302,11 @@ export default function Home() {
                       </div>
 
                       <button
-                        className={`group/btn w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg ${
-                          challenge.is_premium
-                            ? "bg-gradient-to-r from-orange-600 via-orange-700 to-red-600 hover:from-orange-500 hover:via-orange-600 hover:to-red-500 hover:shadow-orange-500/25"
-                            : "bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 hover:from-blue-500 hover:via-blue-600 hover:to-cyan-500 hover:shadow-blue-500/25"
-                        }`}
+                        onClick={() => navigate(`/challenge/${challenge.id}`)}
+                        className={`group/btn w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg ${challenge.is_premium
+                          ? "bg-gradient-to-r from-orange-600 via-orange-700 to-red-600 hover:from-orange-500 hover:via-orange-600 hover:to-red-500 hover:shadow-orange-500/25"
+                          : "bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 hover:from-blue-500 hover:via-blue-600 hover:to-cyan-500 hover:shadow-blue-500/25"
+                          }`}
                       >
                         <Code className="w-4 h-4 group-hover/btn:rotate-12 transition-transform duration-200" />
                         <span>{challenge.is_premium ? "Premium Domain" : "Enter Domain"}</span>

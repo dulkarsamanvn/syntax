@@ -16,6 +16,8 @@ import UserProfile from './Pages/UserProfile'
 import Settings from './Pages/Settings'
 import EditProfile from './Pages/EditProfile'
 import ChallengeList from './Pages/Admin/Challenges/ChallengeList'
+import ChallengeSolve from './Pages/ChallengeSolve'
+import LevelList from './Pages/Admin/Levels/LevelList'
 
 function App() {
   return (
@@ -71,6 +73,16 @@ function App() {
         <Route path='/admin/challenge-management' element={
           <AdminProtectedRoute>
             <ChallengeList/>
+          </AdminProtectedRoute>} />
+
+        <Route path='/challenge/:id' element={
+          <ProtectedRoute>
+            <ChallengeSolve/>
+          </ProtectedRoute>} />
+        
+        <Route path='/admin/level-management' element={
+          <AdminProtectedRoute>
+            <LevelList/>
           </AdminProtectedRoute>} />
         
         
