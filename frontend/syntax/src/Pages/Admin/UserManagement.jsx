@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { Search, ChevronDown, ChevronLeft, ChevronRight, Users } from "lucide-react"
 import AdminSideBar from "../../Components/AdminSideBar"

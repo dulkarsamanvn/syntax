@@ -3,13 +3,13 @@ import {
   Search,
   Bell,
   MessageSquare,
+  Award,
   Users,
   Trophy,
   Eye,
   Code,
   Zap,
   Shield,
-  BarChart3,
   Sparkles,
   ArrowRight,
   CircleCheck
@@ -95,10 +95,10 @@ export default function Home() {
             <button className="md:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200">
               <Search className="w-5 h-5" />
             </button>
-            <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200">
-              <BarChart3 className="w-5 h-5" />
+            <button onClick={()=>navigate('/leaderboard')} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200" title="leaderboard">
+              <Award className="w-5 h-5" />
             </button>
-            <button className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200">
+            <button className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200" title="chat">
               <MessageSquare className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-xs rounded-full w-4 h-4 flex items-center justify-center shadow-lg animate-pulse">
                 2

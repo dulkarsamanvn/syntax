@@ -18,6 +18,7 @@ import EditProfile from './Pages/EditProfile'
 import ChallengeList from './Pages/Admin/Challenges/ChallengeList'
 import ChallengeSolve from './Pages/ChallengeSolve'
 import LevelList from './Pages/Admin/Levels/LevelList'
+import LeaderBoard from './Pages/LeaderBoard'
 
 function App() {
   return (
@@ -85,8 +86,11 @@ function App() {
             <LevelList/>
           </AdminProtectedRoute>} />
         
-        
-        
+        <Route path='/leaderboard' element={
+          <ProtectedRoute>
+            <LeaderBoard/>
+          </ProtectedRoute>} />
+           
 
       </Routes>
     </Router>

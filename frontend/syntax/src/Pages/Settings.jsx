@@ -18,7 +18,7 @@ function Settings() {
     }
   }
   return (
-    <div>
+    <div className='min-h-screen bg-gradient-to-b from-black to-gray-900 text-white flex items-center justify-center'>
       {/* <button onClick={handleLogout}>Logout</button> */}
       <Button className=" mt-10 ml-10 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 rounded-lg font-medium text-sm transition-all duration-200 shadow-lg hover:shadow-xl"
         onClick={handleLogout}>

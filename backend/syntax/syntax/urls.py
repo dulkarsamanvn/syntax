@@ -22,4 +22,5 @@ urlpatterns = [
     path('', include('accounts.urls')),
     path('profile/', include('user_profile.urls')),
     path('challenge/', include('challenge.urls')),
+    path('leaderboard/', include('leaderboard.urls')),
 ]

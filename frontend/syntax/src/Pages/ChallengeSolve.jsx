@@ -40,21 +40,44 @@ function ChallengeSolve() {
   const [showCompletionModal, setShowCompletionModal] = useState(false)
   const [completionData, setCompletionData] = useState(null)
   const [submissions,setSubmissions]=useState([])
+  const [userId,setUserId]=useState(null)
+
+
+  useEffect(()=>{
+    const fetchUserProfile=async()=>{
+      try{
+        const res=await axiosInstance.get('/profile/')
+        setUserId(res.data.id || res.data.username)
+      }catch(err){
+        console.error("error fetching profile",err)
+      }
+    }
+
+    fetchUserProfile()
+  },[])
 
   useEffect(() => {
     const fetchChallenge = async () => {
       try {
         const res = await axiosInstance.get(`/challenge/${id}/`)
         setChallenge(res.data)
-        const savedCode = localStorage.getItem(`challenge_code_${res.data.id}_python`)
-        setCode(savedCode || res.data.initial_code?.["python"] || "")
+        if(userId){
+          const savedCode = localStorage.getItem(`challenge_code_${res.data.id}_python_${userId}`)
+          if(savedCode && savedCode.trim() !==''){
+            setCode(savedCode)
+          }else{
+            setCode(res.data.initial_code?.["python"] || "")
+          }
+        }else{
+          setCode(res.data.initial_code?.["python"] || "")
+        }
         setTimeLeft(res.data.time_limit * 60)
       } catch (err) {
         console.error("error fetching challenge", err)
       }
     }
     fetchChallenge()
-  }, [id])
+  }, [id,userId])
 
   useEffect(() => {
     if (!timerActive || timeLeft <= 0) return
@@ -156,8 +179,16 @@ function ChallengeSolve() {
 
   const handleLanguageChange = (lang) => {
     setLanguage(lang)
-    const savedCode=localStorage.getItem(`challenge_code_${challenge.id}_${lang}`)
-    setCode(savedCode || challenge.initial_code?.[lang] || "")
+    if(userId && challenge){
+      const savedCode=localStorage.getItem(`challenge_code_${challenge.id}_${lang}_${userId}`)
+      if(savedCode && savedCode.trim() !==''){
+        setCode(savedCode)
+      }else{
+        setCode(challenge.initial_code?.[lang] || "")
+      }
+    }else{
+      setCode(challenge.initial_code?.[lang] || "")
+    }
   }
 
   const handleBack = () => {
@@ -412,7 +443,9 @@ function ChallengeSolve() {
               ]}
               onChange={(value) => {
                 setCode(value)
-                localStorage.setItem(`challenge_code_${challenge.id}_${language}`,value)
+                if(userId && challenge){
+                  localStorage.setItem(`challenge_code_${challenge.id}_${language}_${userId}`,value)
+                }
               }}
               readOnly={!timerActive || isTimeUp}
             />

@@ -96,7 +96,9 @@ class RunChallengeView(APIView):
         except Challenge.DoesNotExist:
             return Response({'error':'Challenge not found'},status=status.HTTP_404_NOT_FOUND)
         
-        function_name = challenge.function_signature.strip().split('(')[0].replace("def", "").strip()
+        
+        # function_name = challenge.function_signature.strip().split('(')[0].replace("def", "").strip()
+        function_name = challenge.function_signature.strip()
         visible_cases = [tc for tc in challenge.test_cases if not tc["hidden"]]
         console_output=[]
         passed=0

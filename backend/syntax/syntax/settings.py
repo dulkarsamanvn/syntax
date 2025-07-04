@@ -50,7 +50,8 @@ INSTALLED_APPS = [
 
     'accounts',
     'user_profile',
-    'challenge'
+    'challenge',
+    'leaderboard'
 ]
 
 MIDDLEWARE = [
