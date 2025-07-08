@@ -13,9 +13,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model=User
-        fields=['username', 'email', 'xp', 'current_streak', 'longest_streak',
+        fields=['id',
+                'username', 'email', 'xp', 'current_streak', 'longest_streak',
                 'is_premium', 'profile_photo', 'level', 'rank','rank_title','xp_for_next_level','xp_needed','profile_photo_url']
         read_only_fields = [
+            'id',
             'email', 'xp', 'current_streak', 'longest_streak',
             'is_premium', 'level', 'rank',
             'rank_title', 'xp_for_next_level', 'xp_needed','profile_photo_url'

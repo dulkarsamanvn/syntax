@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import Login from "../Pages/Login";
+import Login from "../Pages/User/Login";
 
 function ProtectedRoute({children}){
     const isAuthenticated=localStorage.getItem('isAuthenticated');

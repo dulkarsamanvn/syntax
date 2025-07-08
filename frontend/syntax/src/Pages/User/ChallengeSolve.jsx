@@ -74,6 +74,11 @@ function ChallengeSolve() {
         setTimeLeft(res.data.time_limit * 60)
       } catch (err) {
         console.error("error fetching challenge", err)
+        if(err.response?.status === 403){
+          navigate('/home')
+        }else if(err.response?.status === 404){
+          navigate('/home')
+        }
       }
     }
     fetchChallenge()
@@ -207,6 +212,11 @@ function ChallengeSolve() {
   const handleNextChallenge = () => {
     setShowCompletionModal(false)
     navigate("/home")
+  }
+
+  const handleLeaderboard=()=>{
+    setShowCompletionModal(false)
+    navigate('/leaderboard')
   }
 
   if (!challenge) {
@@ -619,7 +629,7 @@ function ChallengeSolve() {
                 </div> */}
 
                 <div className="space-y-3">
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors">
+                  <button onClick={handleLeaderboard} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors">
                     <BarChart3 className="w-4 h-4" />
                     <span>Leaderboard</span>
                   </button>

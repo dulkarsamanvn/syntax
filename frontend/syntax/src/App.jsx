@@ -1,24 +1,28 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Signup from './Pages/Signup'
-import OtpVerification from './Pages/OtpVerification'
-import Login from './Pages/Login'
+import Signup from './Pages/User/Signup'
+import OtpVerification from './Pages/User/OtpVerification'
+import Login from './Pages/User/Login'
 import ProtectedRoute from './routes/ProtectedRoute'
 import PublicRoute from './routes/PublicRoute'
 import OTPRoute from './routes/OTPRoute'
-import Home from './Pages/Home'
+import Home from './Pages/User/Home'
 import AdminLogin from './Pages/Admin/AdminLogin'
 import AdminDashboard from './Pages/Admin/AdminDashboard'
 import AdminPublicRoute from './routes/AdminPublicRoute'
 import AdminProtectedRoute from './routes/AdminProtectedRoute'
 import UserManagement from './Pages/Admin/UserManagement'
-import UserProfile from './Pages/UserProfile'
-import Settings from './Pages/Settings'
-import EditProfile from './Pages/EditProfile'
+import UserProfile from './Pages/User/UserProfile'
+import Settings from './Pages/User/Settings'
+import EditProfile from './Pages/User/EditProfile'
 import ChallengeList from './Pages/Admin/Challenges/ChallengeList'
-import ChallengeSolve from './Pages/ChallengeSolve'
+import ChallengeSolve from './Pages/User/ChallengeSolve'
 import LevelList from './Pages/Admin/Levels/LevelList'
-import LeaderBoard from './Pages/LeaderBoard'
+import LeaderBoard from './Pages/User/LeaderBoard'
+import ChatRoom from './Pages/User/ChatRoom'
+import ChatLayout from './Pages/User/ChatLayout'
+import ChatHome from './Pages/User/ChatHome'
+import GroupChatRoom from './Pages/User/GroupChatRoom'
 
 function App() {
   return (
@@ -90,6 +94,15 @@ function App() {
           <ProtectedRoute>
             <LeaderBoard/>
           </ProtectedRoute>} />
+        
+        <Route path="/chat" element={<ProtectedRoute><ChatLayout /></ProtectedRoute>}>
+          {/* <Route index element={null} />
+          <Route path=":userId" element={null} /> */}
+          <Route index element={<ChatHome/>} />
+          <Route path=":userId" element={<ChatRoom />} />
+          <Route path="group/:id" element={<GroupChatRoom />} />
+        </Route>
+
            
 
       </Routes>

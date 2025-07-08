@@ -23,4 +23,5 @@ urlpatterns = [
     path('profile/', include('user_profile.urls')),
     path('challenge/', include('challenge.urls')),
     path('leaderboard/', include('leaderboard.urls')),
+    path('chat/', include('chat.urls')),
 ]

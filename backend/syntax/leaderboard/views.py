@@ -33,4 +33,5 @@ class LeaderBoardView(APIView):
         serializer=LeaderboardSerializer(page,many=True)
         paginated_response=paginator.get_paginated_response(serializer.data)
         paginated_response.data['top_users']=top_serializer.data
+        paginated_response.data['current_user_id']=request.user.id
         return paginated_response

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import axiosInstance from '../api/axiosInstance'
+import axiosInstance from '../../api/axiosInstance'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Search, Bell, MessageSquare, Clock, Code2, Users, Zap, Settings, BarChart3 } from "lucide-react"
 

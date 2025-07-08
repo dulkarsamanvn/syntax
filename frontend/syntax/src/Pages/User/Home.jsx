@@ -98,7 +98,7 @@ export default function Home() {
             <button onClick={()=>navigate('/leaderboard')} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200" title="leaderboard">
               <Award className="w-5 h-5" />
             </button>
-            <button className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200" title="chat">
+            <button onClick={()=>navigate('/chat')} className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200" title="chat">
               <MessageSquare className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-xs rounded-full w-4 h-4 flex items-center justify-center shadow-lg animate-pulse">
                 2
@@ -287,15 +287,15 @@ export default function Home() {
                         <div className="flex items-center space-x-4">
                           <div className="flex items-center space-x-2">
                             <Users className="w-4 h-4" />
-                            <span>{Math.floor(Math.random() * 400) + 100}</span>
+                            <span>{challenge.completed_users}</span>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <span className="font-medium">{Math.floor(Math.random() * 70) + 10}%</span>
+                          <span className="font-medium">{challenge.success_rate}%</span>
                           <div className="w-12 h-2 bg-slate-700 rounded-full overflow-hidden">
                             <div
                               className="h-2 bg-gradient-to-r from-green-500 to-green-600 rounded-full transition-all duration-500"
-                              style={{ width: `${Math.floor(Math.random() * 70) + 10}%` }}
+                              style={{ width: `${challenge.success_rate}%` }}
                             ></div>
                           </div>
                         </div>

@@ -8,6 +8,7 @@ from challenge.models import Challenge,Submission
 import requests
 import json,time
 from challenge.utils import format_input_args
+from django.db.models import Count,Avg
 # Create your views here.
 
 class ChallengeCreateView(APIView):
@@ -40,9 +41,18 @@ class ChallengeListView(APIView):
 
         for challenge in challenges:
             is_completed=Submission.objects.filter(user=user,challenge=challenge,is_completed=True).exists()
+            total_attempts=Submission.objects.filter(challenge=challenge).count()
+            completed_users_count=Submission.objects.filter(challenge=challenge,is_completed=True).values('user').distinct().count()
+            if total_attempts > 0:
+                success_rate=round((completed_users_count/total_attempts)*100,2)
+            else:
+                success_rate=0.0
             serializer=ChallengeSerializer(challenge,context={'request':request})
             challenge_data=serializer.data
             challenge_data['is_completed']=is_completed
+            challenge_data['success_rate']=success_rate
+            challenge_data['completed_users']=completed_users_count
+
             challenge_list.append(challenge_data)
         return Response(challenge_list)
 
@@ -75,6 +85,8 @@ class ChallengeDetailView(APIView):
     def get(self,request,id):
         try:
             challenge=Challenge.objects.get(id=id)
+            if not challenge.is_active and not (request.user.is_staff or request.user.is_superuser):
+                return Response({'detail': 'This challenge is not available.'},status=status.HTTP_403_FORBIDDEN)
             serializer=ChallengeSerializer(challenge)
             return Response(serializer.data)
         except Challenge.DoesNotExist:
@@ -229,7 +241,7 @@ class SubmitChallengeView(APIView):
             
             already_completed=Submission.objects.filter(user=user,challenge=challenge,is_completed=True).exists()
             
-            function_name=challenge.function_signature.strip().split('(')[0].replace('def','').strip()
+            function_name=challenge.function_signature.strip()
             visible_cases=[tc for tc in challenge.test_cases]
             console_output=[]
             passed=0

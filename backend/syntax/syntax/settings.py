@@ -51,7 +51,10 @@ INSTALLED_APPS = [
     'accounts',
     'user_profile',
     'challenge',
-    'leaderboard'
+    'leaderboard',
+    'chat',
+
+    'channels'
 ]
 
 MIDDLEWARE = [
@@ -83,6 +86,18 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'syntax.wsgi.application'
+
+ASGI_APPLICATION = 'syntax.asgi.application'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
+
 
 
 # Database
