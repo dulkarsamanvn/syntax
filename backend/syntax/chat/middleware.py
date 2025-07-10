@@ -15,15 +15,12 @@ class JWTAuthFromCookieMiddleware(BaseMiddleware):
             for kv in cookies_raw.split('; ') if '=' in kv
         }
 
-        print("[JWT MIDDLEWARE] Raw Headers:", headers)
-        print("[JWT MIDDLEWARE] Cookies Raw:", cookies_raw)
-        print("[JWT MIDDLEWARE] Cookies Parsed:", cookies)
 
         access_token = cookies.get("access_token")
-        print("access_token",access_token)
+        
         
 
-        scope["user"] = AnonymousUser()  # default to anonymous
+        scope["user"] = AnonymousUser()  
 
         if access_token:
             try:

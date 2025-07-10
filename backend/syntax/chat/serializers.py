@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from accounts.models import User
-from chat.models import ChatRoom
+from chat.models import ChatRoom,Group
 
 
 class UserMiniSerializer(serializers.ModelSerializer):
@@ -40,3 +40,15 @@ class ChatRoomListSerializer(serializers.ModelSerializer):
     def get_last_message_time(self,obj):
         return obj.last_message.timestamp if obj.last_message else None
     
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Group
+        fields=["id", "name", "description", "is_private", "member_limit", "creator", "created_at"]
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=User
+        fields=['id','username','email']

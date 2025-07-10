@@ -15,11 +15,21 @@ def get_old_messages(room_id):
     return [
         {
             "message": message.text,
+            "message_id": message.id,
             "sender_id": message.sender.id,
             "timestamp": message.timestamp.isoformat(),
         }
         for message in messages
     ]
+
+@sync_to_async
+def delete_message_by_id(message_id,sender_id):
+    try:
+        msg=Message.objects.get(id=message_id, sender_id=sender_id)
+        msg.delete()
+        return True
+    except Message.DoesNotExist:
+        return False
 
 class ChatConsumer(AsyncWebsocketConsumer):
 
@@ -61,6 +71,26 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 return
             message=data.get('message')
             sender_id=data.get('sender_id')
+            typing=data.get('typing')
+            delete_id=data.get('delete_id')
+
+            if delete_id:
+                if not sender_id:
+                    await self.send(text_data=json.dumps({'error': 'Sender ID is required for deletion'}))
+                    return
+                await self.handle_delete(delete_id, sender_id)
+                return
+
+            if typing is not None and sender_id:
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'typing_event',
+                        'sender_id': sender_id,
+                        'is_typing': typing,
+                    }
+                )
+                return
 
             if not message:
                 logger.error("Message is missing or empty")
@@ -165,5 +195,33 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }))
         except Exception as e:
             logger.error(f"Error sending message to WebSocket: {e}")
+    
+    async def typing_event(self,event):
+        logger.info(f"Typing event: {event}")
+        await self.send(text_data=json.dumps({
+            'type': 'typing',
+            'sender_id': event['sender_id'],
+            'is_typing': event['is_typing'],
+        }))
+
+
+    async def handle_delete(self,message_id,sender_id):
+        success=await delete_message_by_id(message_id,sender_id)
+        if success:
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'delete_message_event',
+                    'message_id': message_id,
+                }
+            )
+        else:
+            await self.send(text_data=json.dumps({'error': 'Message not found or not authorized to delete'}))
+    
+    async def delete_message_event(self,event):
+        await self.send(text_data=json.dumps({
+            'type': 'delete',
+            'message_id': event['message_id'],
+        }))
         
         

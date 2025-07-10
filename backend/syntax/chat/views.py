@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from accounts.models import User
 from rest_framework.response import Response
 from chat.models import ChatRoom,Membership,Group
-from chat.serializers import ChatRoomListSerializer
+from chat.serializers import ChatRoomListSerializer,GroupSerializer,UserSerializer
 from rest_framework import status
 # Create your views here.
 
@@ -84,3 +84,82 @@ class CreateGroupView(APIView):
             "group_id": group.id,
             "chatroom_id": chatroom.id
         },status=status.HTTP_201_CREATED)
+
+
+class GroupDetailsView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def get(self,request,chatroom_id):
+        try:
+            chatroom=ChatRoom.objects.get(id=chatroom_id)
+            group=chatroom.group
+            members=[m.user for m in chatroom.memberships.select_related('user')]
+            return Response({
+                'group':GroupSerializer(group).data,
+                'members':UserSerializer(members,many=True).data
+            })
+        except ChatRoom.DoesNotExist:
+            return Response({'error':'Chatroom Not Found'},status=status.HTTP_404_NOT_FOUND)
+
+
+
+class RemoveGroupMemberView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def post(self,request,chatroom_id):
+        user_id=request.data.get('user_id')
+        try:
+            chatroom=ChatRoom.objects.get(id=chatroom_id)
+            group=chatroom.group
+            membership=Membership.objects.get(user_id=user_id,chatroom=chatroom)
+            membership.delete()
+            return Response({'success':True})
+        except ChatRoom.DoesNotExist:
+            return Response({'error':'Chatroom not found'},status=status.HTTP_404_NOT_FOUND)
+
+
+
+class PreviousChatUsers(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def get(self,request):
+        chatroom_id=request.query_params.get('chatroom_id')
+        if not chatroom_id:
+            return Response({'error':'chatroom_id is required'},status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            chatroom=ChatRoom.objects.get(id=chatroom_id)
+        except ChatRoom.DoesNotExist:
+            return Response({'error':'Chatroom not found'},status=status.HTTP_404_NOT_FOUND)
+        current_members=set(chatroom.memberships.values_list('user_id',flat=True))
+        rooms=ChatRoom.objects.filter(is_group=False,participants=request.user)
+        users=set()
+        for room in rooms.prefetch_related('participants'):
+            for participant in room.participants.all():
+                if participant != request.user and participant.id not in current_members:
+                    users.add(participant)
+        serialized=UserSerializer(users,many=True)
+        return Response(serialized.data)
+                    
+
+class AddGroupMemberView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def post(self,request,chatroom_id):
+        user_id=request.data.get('user_id')
+        try:
+            chatroom=ChatRoom.objects.get(id=chatroom_id)
+            group=chatroom.group
+
+            if not request.user == group.creator:
+                return Response({'error': 'Only the group creator can add members'}, status=403)
+            if chatroom.memberships.count() >= group.member_limit:
+                return Response({'error': 'Group member limit reached'}, status=400)
+            user=User.objects.get(id=user_id)
+            Membership.objects.create(user=user,chatroom=chatroom)
+            return Response({
+                'success':True,
+                'user':UserSerializer(user).data
+            })
+        except ChatRoom.DoesNotExist:
+            return Response({'error': 'Chatroom or User not found'}, status=404)

@@ -1,7 +1,7 @@
 import axiosInstance from "@/api/axiosInstance"
 import { useEffect, useRef, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { MessageCircle, Search, Users, X} from "lucide-react"
+import { MessageCircle, Search, Users, X } from "lucide-react"
 import Spinner from "@/Components/Spinner"
 
 function ChatHome() {
@@ -122,7 +122,7 @@ function ChatHome() {
         is_private: isPrivate,
         member_ids: selectedUserIds,
       })
-      setActiveTab("groups"); // 👈 Switch to group tab
+      setActiveTab("groups");
       navigate(`/chat/group/${res.data.chatroom_id}`);
       setHighlightedChatId(res.data.chatroom_id);
     } catch (err) {
@@ -204,9 +204,8 @@ function ChatHome() {
         <div className="flex space-x-1 mb-4 bg-gray-800 p-1 rounded-lg">
           <button
             onClick={() => setActiveTab("chats")}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === "chats" ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all" : "text-gray-300 hover:text-white hover:bg-gray-700"
-            }`}
+            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === "chats" ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all" : "text-gray-300 hover:text-white hover:bg-gray-700"
+              }`}
           >
             <MessageCircle className="h-4 w-4" />
             Chats
@@ -216,9 +215,8 @@ function ChatHome() {
           </button>
           <button
             onClick={() => setActiveTab("groups")}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === "groups" ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all" : "text-gray-300 hover:text-white hover:bg-gray-700"
-            }`}
+            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === "groups" ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all" : "text-gray-300 hover:text-white hover:bg-gray-700"
+              }`}
           >
             <Users className="h-4 w-4" />
             Groups
@@ -265,200 +263,200 @@ function ChatHome() {
           </div>
         ) : (
           <div className="divide-y divide-gray-800">
-            {filteredChats.map((chat) => (
-              <Link
-                key={chat.id}
-                to={chat.is_group ? `/chat/group/${chat.id}` : `/chat/${chat.other_user?.id}`}
-                onClick={() => setHighlightedChatId(null)}
-                className={`
+            {filteredChats.sort((a, b) => new Date(b.last_message_time) - new Date(a.last_message_time))
+              .map((chat) => (
+                <Link
+                  key={chat.id}
+                  to={chat.is_group ? `/chat/group/${chat.id}` : `/chat/${chat.other_user?.id}`}
+                  onClick={() => setHighlightedChatId(null)}
+                  className={`
                   flex items-center p-4 transition-colors hover:bg-gray-900
                   ${highlightedChatId === chat.id ? "bg-purple-900/30" : ""}
                 `}
-              >
-                <div className="relative flex-shrink-0">
-                  {chat.is_group ? (
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center justify-center text-lg font-bold">
-                      {chat.group_name?.charAt(0).toUpperCase() || "G"}
-                    </div>
-                  ) : chat.other_user?.profile_photo_url ? (
-                    <img
-                      src={chat.other_user.profile_photo_url || "/placeholder.svg"}
-                      alt={`${chat.other_user.username}'s avatar`}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-gray-700"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center border-2 border-gray-700">
-                      <span className="text-white font-semibold text-lg">
-                        {chat.other_user?.username?.charAt(0).toUpperCase() || "?"}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="ml-4 flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-white truncate">
-                      {chat.is_group ? chat.group_name : chat.other_user?.username}
-                    </h3>
-                    {chat.last_message_time && (
-                      <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
-                        {new Date(chat.last_message_time).toLocaleDateString()}
-                      </span>
+                >
+                  <div className="relative flex-shrink-0">
+                    {chat.is_group ? (
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center justify-center text-lg font-bold">
+                        {chat.group_name?.charAt(0).toUpperCase() || "G"}
+                      </div>
+                    ) : chat.other_user?.profile_photo_url ? (
+                      <img
+                        src={chat.other_user.profile_photo_url || "/placeholder.svg"}
+                        alt={`${chat.other_user.username}'s avatar`}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-700"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center border-2 border-gray-700">
+                        <span className="text-white font-semibold text-lg">
+                          {chat.other_user?.username?.charAt(0).toUpperCase() || "?"}
+                        </span>
+                      </div>
                     )}
                   </div>
-                  {chat.last_message ? (
-                    <p className="text-sm text-gray-400 truncate mt-1">{chat.last_message}</p>
-                  ) : (
-                    <p className="text-sm text-gray-500 italic mt-1">
-                      {chat.is_group ? "Start group conversation" : "Start a conversation"}
-                    </p>
-                  )}
-                </div>
-                {chat.unread_count > 0 && (
-                  <div className="ml-2 flex-shrink-0">
-                    <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-blue-600 rounded-full min-w-[20px] h-5">
-                      {chat.unread_count > 99 ? "99+" : chat.unread_count}
-                    </span>
+                  <div className="ml-4 flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-white truncate">
+                        {chat.is_group ? chat.group_name : chat.other_user?.username}
+                      </h3>
+                      {chat.last_message_time && (
+                        <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                          {new Date(chat.last_message_time).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                    {chat.last_message ? (
+                      <p className="text-sm text-gray-400 truncate mt-1">{chat.last_message}</p>
+                    ) : (
+                      <p className="text-sm text-gray-500 italic mt-1">
+                        {chat.is_group ? "Start group conversation" : "Start a conversation"}
+                      </p>
+                    )}
                   </div>
-                )}
-              </Link>
-            ))}
+                  {chat.unread_count > 0 && (
+                    <div className="ml-2 flex-shrink-0">
+                      <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-blue-600 rounded-full min-w-[20px] h-5">
+                        {chat.unread_count > 99 ? "99+" : chat.unread_count}
+                      </span>
+                    </div>
+                  )}
+                </Link>
+              ))}
           </div>
         )}
       </div>
 
       {/* Create Group Modal */}
-      {/* Create Group Modal */}
-{showGroupModal && (
-  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-    <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 flex justify-between items-center">
-        <h2 className="text-xl font-bold">Create New Group</h2>
-        <button
-          onClick={() => setShowGroupModal(false)}
-          className="p-1 hover:bg-white/20 rounded-full transition-colors"
-        >
-          <X size={18} />
-        </button>
-      </div>
+      {showGroupModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold">Create New Group</h2>
+              <button
+                onClick={() => setShowGroupModal(false)}
+                className="p-1 hover:bg-white/20 rounded-full transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-      {/* Content */}
-      <div className="p-4">
-        <div className="space-y-4">
-          {/* Group Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Group Name</label>
-            <input
-              type="text"
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              placeholder="Enter group name"
-            />
-          </div>
+            {/* Content */}
+            <div className="p-4">
+              <div className="space-y-4">
+                {/* Group Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Group Name</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    placeholder="Enter group name"
+                  />
+                </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 resize-none"
-              value={groupDescription}
-              onChange={(e) => setGroupDescription(e.target.value)}
-              placeholder="What is this group about?"
-              rows={2}
-            />
-          </div>
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 resize-none"
+                    value={groupDescription}
+                    onChange={(e) => setGroupDescription(e.target.value)}
+                    placeholder="What is this group about?"
+                    rows={2}
+                  />
+                </div>
 
-          {/* Add Members */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Add Members</label>
-            <div className="max-h-32 overflow-y-auto bg-gray-50 border border-gray-200 rounded-lg p-2">
-              {chatUsers.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center py-2">No users available</p>
-              ) : (
-                <div className="space-y-1">
-                  {chatUsers.map((user) => (
-                    <label
-                      key={user.id}
-                      className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors"
-                    >
+                {/* Add Members */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Add Members</label>
+                  <div className="max-h-32 overflow-y-auto bg-gray-50 border border-gray-200 rounded-lg p-2">
+                    {chatUsers.length === 0 ? (
+                      <p className="text-gray-500 text-sm text-center py-2">No users available</p>
+                    ) : (
+                      <div className="space-y-1">
+                        {chatUsers.map((user) => (
+                          <label
+                            key={user.id}
+                            className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              value={user.id}
+                              checked={selectedUserIds.includes(user.id)}
+                              onChange={(e) => {
+                                const id = Number.parseInt(e.target.value)
+                                setSelectedUserIds((prev) =>
+                                  e.target.checked ? [...prev, id] : prev.filter((uid) => uid !== id),
+                                )
+                              }}
+                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            {user.avatar ? (
+                              <img
+                                src={user.avatar || "/placeholder.svg"}
+                                alt="avatar"
+                                className="w-6 h-6 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs flex items-center justify-center font-medium">
+                                {user.username.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <span className="text-sm text-gray-900">{user.username}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Member Limit and Private */}
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Member Limit</label>
+                    <input
+                      type="number"
+                      min={2}
+                      max={100}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                      value={groupLimit}
+                      onChange={(e) => setGroupLimit(e.target.value)}
+                    />
+                  </div>
+                  <div className="mt-6">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                       <input
                         type="checkbox"
-                        value={user.id}
-                        checked={selectedUserIds.includes(user.id)}
-                        onChange={(e) => {
-                          const id = Number.parseInt(e.target.value)
-                          setSelectedUserIds((prev) =>
-                            e.target.checked ? [...prev, id] : prev.filter((uid) => uid !== id),
-                          )
-                        }}
+                        checked={isPrivate}
+                        onChange={(e) => setIsPrivate(e.target.checked)}
                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
-                      {user.avatar ? (
-                        <img
-                          src={user.avatar || "/placeholder.svg"}
-                          alt="avatar"
-                          className="w-6 h-6 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs flex items-center justify-center font-medium">
-                          {user.username.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <span className="text-sm text-gray-900">{user.username}</span>
+                      Private
                     </label>
-                  ))}
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
 
-          {/* Member Limit and Private */}
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Member Limit</label>
-              <input
-                type="number"
-                min={2}
-                max={100}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                value={groupLimit}
-                onChange={(e) => setGroupLimit(e.target.value)}
-              />
-            </div>
-            <div className="mt-6">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={isPrivate}
-                  onChange={(e) => setIsPrivate(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                Private
-              </label>
+              {/* Footer */}
+              <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => setShowGroupModal(false)}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateGroup}
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium"
+                >
+                  Create
+                </button>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-200">
-          <button
-            onClick={() => setShowGroupModal(false)}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleCreateGroup}
-            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium"
-          >
-            Create
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
     </div>
   )
 }
