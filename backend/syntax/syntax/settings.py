@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'challenge',
     'leaderboard',
     'chat',
+    'premium',
 
     'channels'
 ]
@@ -208,7 +209,8 @@ cloudinary.config(
     api_secret=config("CLOUDINARY_API_SECRET")
 )
 
-
+RAZORPAY_KEY_ID=config('RAZORPAY_KEY_ID')
+RAZORPAY_KEY_SECRET=config('RAZORPAY_KEY_SECRET')
 
 
 

@@ -23,6 +23,8 @@ import ChatRoom from './Pages/User/ChatRoom'
 import ChatLayout from './Pages/User/ChatLayout'
 import ChatHome from './Pages/User/ChatHome'
 import GroupChatRoom from './Pages/User/GroupChatRoom'
+import PlanManagement from './Pages/Admin/PlanManagement'
+import Premium from './Pages/User/Premium'
 
 function App() {
   return (
@@ -96,14 +98,20 @@ function App() {
           </ProtectedRoute>} />
         
         <Route path="/chat" element={<ProtectedRoute><ChatLayout /></ProtectedRoute>}>
-          {/* <Route index element={null} />
-          <Route path=":userId" element={null} /> */}
           <Route index element={<ChatHome/>} />
           <Route path=":userId" element={<ChatRoom />} />
           <Route path="group/:id" element={<GroupChatRoom />} />
         </Route>
 
-           
+        <Route path='/admin/plan-management' element={
+          <AdminProtectedRoute>
+            <PlanManagement/>
+          </AdminProtectedRoute>} />
+          
+        <Route path='/premium' element={
+          <ProtectedRoute>
+            <Premium/>
+          </ProtectedRoute>} />
 
       </Routes>
     </Router>

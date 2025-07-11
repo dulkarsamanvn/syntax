@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import CreateChallengeModal from "./CreateChallengeModal"
 import { Plus, Search, Eye, Edit, Trash2, Crown, Clock, Trophy, Activity, Ban, CheckCircle } from "lucide-react"
 import ConfirmModal from "@/Components/ConfirmModal"
+import Spinner from "@/Components/Spinner"
 
 function ChallengeList() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -162,10 +163,7 @@ function ChallengeList() {
        
         <div className="bg-slate-800 border border-slate-700 rounded-xl shadow-xl overflow-hidden">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              <span className="ml-3 text-slate-400">Loading challenges...</span>
-            </div>
+            <Spinner/>
           ) : filteredChallenges.length === 0 ? (
             <div className="text-center py-12">
               <Activity className="mx-auto text-slate-600 mb-4" size={48} />

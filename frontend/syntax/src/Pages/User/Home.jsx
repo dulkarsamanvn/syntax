@@ -27,11 +27,25 @@ export default function Home() {
     rank: 1,
   })
   const [challenges, setChallenges] = useState([])
+  const [isPremium,setIsPremium]=useState(false)
   const navigate = useNavigate()
 
   const handleProfile = () => {
     navigate("/profile")
   }
+
+  useEffect(()=>{
+    const fetchSubscription=async()=>{
+      try{
+        const res=await axiosInstance.get('/premium/check-subscription/')
+        setIsPremium(res.data.is_premium)
+      }catch(err){
+        console.error('error fetching subscription',err)
+      }
+    }
+
+    fetchSubscription()
+  },[])
 
   useEffect(() => {
     const fetch_profile = async () => {
@@ -302,7 +316,13 @@ export default function Home() {
                       </div>
 
                       <button
-                        onClick={() => navigate(`/challenge/${challenge.id}`)}
+                        onClick={() => {
+                          if(challenge.is_premium && !isPremium){
+                            navigate('/premium')
+                          }else{
+                            navigate(`/challenge/${challenge.id}`)
+                          }
+                        }}
                         className={`group/btn w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg ${challenge.is_premium
                           ? "bg-gradient-to-r from-orange-600 via-orange-700 to-red-600 hover:from-orange-500 hover:via-orange-600 hover:to-red-500 hover:shadow-orange-500/25"
                           : "bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 hover:from-blue-500 hover:via-blue-600 hover:to-cyan-500 hover:shadow-blue-500/25"
@@ -353,7 +373,7 @@ export default function Home() {
                   </div>
 
                   <div className="text-center">
-                    <button className="group bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 hover:from-purple-500 hover:via-pink-500 hover:to-orange-500 px-10 py-4 rounded-xl font-bold text-lg shadow-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-purple-500/25 flex items-center space-x-3 mx-auto">
+                    <button onClick={()=>navigate('/premium')} className="group bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 hover:from-purple-500 hover:via-pink-500 hover:to-orange-500 px-10 py-4 rounded-xl font-bold text-lg shadow-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-purple-500/25 flex items-center space-x-3 mx-auto">
                       <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform duration-200" />
                       <span>Upgrade To Premium</span>
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
