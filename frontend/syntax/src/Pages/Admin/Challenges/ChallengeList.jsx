@@ -2,7 +2,7 @@ import axiosInstance from "@/api/axiosInstance"
 import AdminSideBar from "@/Components/AdminSideBar"
 import { useEffect, useState } from "react"
 import CreateChallengeModal from "./CreateChallengeModal"
-import { Plus, Search, Eye, Edit, Trash2, Crown, Clock, Trophy, Activity, Ban, CheckCircle } from "lucide-react"
+import { Plus, Search, Eye, Edit, Trash2, Crown, Clock, Trophy, Activity, Ban, CheckCircle,ChevronLeft, ChevronRight } from "lucide-react"
 import ConfirmModal from "@/Components/ConfirmModal"
 import Spinner from "@/Components/Spinner"
 
@@ -16,12 +16,23 @@ function ChallengeList() {
   const [message, setMessage] = useState("")
   const [selectedChallenge,setSelectedChallenge]=useState(null)
   const [blockModal,setBlockModal]=useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [count, setCount] = useState(0)
+
+
+  const CHALLENGES_PER_PAGE=4
+  const totalPages = Math.ceil(count / CHALLENGES_PER_PAGE)
 
   const fetchChallenges = async () => {
     try {
       setLoading(true)
-      const res = await axiosInstance.get("/challenge/list/")
-      setChallenges(res.data)
+      const params={
+        page:currentPage,
+        page_size:CHALLENGES_PER_PAGE
+      }
+      const res = await axiosInstance.get("/challenge/list/",{params})
+      setChallenges(res.data.results || [])
+      setCount(res.data.count || 0)
     } catch (error) {
       console.error("Error Fetching Challenges", error)
     } finally {
@@ -31,7 +42,7 @@ function ChallengeList() {
 
   useEffect(() => {
     fetchChallenges()
-  }, [])
+  }, [currentPage])
 
   useEffect(() => {
     if (message) {
@@ -96,6 +107,81 @@ function ChallengeList() {
       console.error("Error toggling challenge status:", error)
       setMessage("Failed to update challenge status")
     }
+  }
+
+  const renderPagination = () => {
+    const buttons = []
+    const maxVisiblePages = 5
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1)
+    }
+
+    // Previous
+    buttons.push(
+      <button
+        key="prev"
+        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+        disabled={currentPage === 1}
+        className="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-50"
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </button>,
+    )
+
+    // Page Numbers
+    for (let i = startPage; i <= endPage; i++) {
+      buttons.push(
+        <button
+          key={i}
+          onClick={() => setCurrentPage(i)}
+          className={`px-3 py-2 rounded-lg ${
+            currentPage === i
+              ? "bg-blue-600 text-white"
+              : "text-slate-400 hover:text-white hover:bg-slate-700"
+          }`}
+        >
+          {i}
+        </button>,
+      )
+    }
+
+    // Ellipsis + Last Page
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        buttons.push(
+          <span key="ellipsis" className="px-3 py-2 text-slate-400">
+            ...
+          </span>,
+        )
+      }
+
+      buttons.push(
+        <button
+          key={totalPages}
+          onClick={() => setCurrentPage(totalPages)}
+          className="px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg"
+        >
+          {totalPages}
+        </button>,
+      )
+    }
+
+    // Next
+    buttons.push(
+      <button
+        key="next"
+        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+        disabled={currentPage === totalPages}
+        className="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-50"
+      >
+        <ChevronRight className="w-4 h-4" />
+      </button>,
+    )
+
+    return buttons
   }
 
   
@@ -269,6 +355,10 @@ function ChallengeList() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <button
+                            onClick={()=>{
+                              setSelectedChallenge(challenge)
+                              setIsModalOpen(true)
+                            }}
                             className="p-2 text-slate-400 hover:text-yellow-400 hover:bg-slate-700 rounded-lg transition-colors"
                             title="Edit Challenge"
                           >
@@ -295,13 +385,18 @@ function ChallengeList() {
             </div>
           )}
         </div>
+        {totalPages > 1 && (
+        <div className="flex justify-center mt-8 gap-1">
+          {renderPagination()}
+        </div>
+      )}
 
-        {/* Results count */}
+        {/* Results count
         {!loading && filteredChallenges.length > 0 && (
           <div className="mt-4 text-slate-400 text-sm">
             Showing {filteredChallenges.length} of {challenges.length} challenges
           </div>
-        )}
+        )} */}
 
         {/* Success Message */}
         {message && (
@@ -318,7 +413,17 @@ function ChallengeList() {
       </div>
 
       {isModalOpen && (
-        <CreateChallengeModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSuccess={fetchChallenges} />
+        <CreateChallengeModal 
+        isOpen={isModalOpen} 
+        onClose={() =>{
+          setIsModalOpen(false)
+          setSelectedChallenge(null)  
+        } } 
+        onSuccess={fetchChallenges} 
+        isEdit={Boolean(selectedChallenge)}
+        challengeId={selectedChallenge?.id}
+        initialData={selectedChallenge}
+        />
       )}
 
       <ConfirmModal

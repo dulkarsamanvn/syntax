@@ -1,6 +1,6 @@
 import axiosInstance from "@/api/axiosInstance"
 import { useEffect, useRef, useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { MessageCircle, Search, Users, X } from "lucide-react"
 import Spinner from "@/Components/Spinner"
 
@@ -18,7 +18,9 @@ function ChatHome() {
   const [chatUsers, setChatUsers] = useState([])
   const [selectedUserIds, setSelectedUserIds] = useState([])
   const [highlightedChatId, setHighlightedChatId] = useState(null)
+  const [currentChatroomId,setCurrentChatroomId]=useState(null)
   const notificationSocket = useRef(null)
+  const location=useLocation()
   const navigate = useNavigate()
 
   const fetchChats = async () => {
@@ -66,7 +68,18 @@ function ChatHome() {
 
   useEffect(() => {
     fetchChats()
-  }, [])
+  }, [location])
+
+  useEffect(() => {
+  if (currentChatroomId) {
+    axiosInstance.post('/chat/mark-as-read/', {
+      chatroom_id: currentChatroomId
+    }).then(() => {
+      refreshChats() // <- update unread count after marking read
+    }).catch(err => console.error("Mark as read failed", err))
+  }
+}, [currentChatroomId])
+
 
   useEffect(() => {
     notificationSocket.current = new WebSocket(`ws://localhost:8000/ws/notifications/`)
@@ -268,7 +281,10 @@ function ChatHome() {
                 <Link
                   key={chat.id}
                   to={chat.is_group ? `/chat/group/${chat.id}` : `/chat/${chat.other_user?.id}`}
-                  onClick={() => setHighlightedChatId(null)}
+                  onClick={() => {
+                    setHighlightedChatId(null)
+                    setCurrentChatroomId(chat.id)
+                  }}
                   className={`
                   flex items-center p-4 transition-colors hover:bg-gray-900
                   ${highlightedChatId === chat.id ? "bg-purple-900/30" : ""}

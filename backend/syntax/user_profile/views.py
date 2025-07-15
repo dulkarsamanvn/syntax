@@ -46,3 +46,19 @@ class LevelListView(APIView):
         levels=Level.objects.all().order_by('number')
         serializer=LevelSerializer(levels,many=True)
         return Response(serializer.data)
+
+class LevelUpdateView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def put(self,request,id):
+        try:
+            level=Level.objects.get(id=id)
+        except Level.DoesNotExist:
+            return Response({'error':'level not found'},status=status.HTTP_404_NOT_FOUND)
+        
+        serializer=LevelSerializer(level,data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message':'level updated successfully'},status=status.HTTP_200_OK)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+

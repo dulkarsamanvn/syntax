@@ -25,6 +25,7 @@ import ChatHome from './Pages/User/ChatHome'
 import GroupChatRoom from './Pages/User/GroupChatRoom'
 import PlanManagement from './Pages/Admin/PlanManagement'
 import Premium from './Pages/User/Premium'
+import ReportManagement from './Pages/Admin/ReportManagement'
 
 function App() {
   return (
@@ -112,6 +113,11 @@ function App() {
           <ProtectedRoute>
             <Premium/>
           </ProtectedRoute>} />
+        
+        <Route path='/admin/report-management' element={
+          <AdminProtectedRoute>
+            <ReportManagement/>
+          </AdminProtectedRoute>} />
 
       </Routes>
     </Router>

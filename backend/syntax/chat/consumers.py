@@ -4,6 +4,8 @@ from asgiref.sync import sync_to_async
 import logging
 from chat.models import ChatRoom,Message
 from accounts.models import User
+from channels.db import database_sync_to_async
+
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +64,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             logger.info(f"Received raw data: {text_data}")
             try:
                 data=json.loads(text_data)
+                # -------------
                 logger.info(f"Parsed data: {data}")
             except json.JSONDecodeError as e:
                 logger.error(f"Invalid JSON received: {e}")
@@ -73,6 +76,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
             sender_id=data.get('sender_id')
             typing=data.get('typing')
             delete_id=data.get('delete_id')
+            msg_type=data.get('type')
+            
+            if msg_type=='mark_read':
+                await self.mark_messages_as_read(data)
+                return
 
             if delete_id:
                 if not sender_id:
@@ -174,7 +182,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "message": message,
                     "sender_id": sender_id,
                     "message_id": message_obj.id,
-                    "timestamp": message_obj.created_at.isoformat() if hasattr(message_obj, 'created_at') else None,
+                    "timestamp": message_obj.timestamp.isoformat(),
+                    # "timestamp": message_obj.created_at.isoformat() if hasattr(message_obj, 'created_at') else None,
                 }
             )
         except Exception as e:
@@ -223,5 +232,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'type': 'delete',
             'message_id': event['message_id'],
         }))
+    
+    async def mark_messages_as_read(self,data):
+        user=self.scope['user']
+        chatroom_id=data.get('chatroom_id')
+
+        if not user.is_authenticated:
+            await self.send(text_data=json.dumps({'error': 'Authentication required'}))
+            return
+        try:
+            room=await sync_to_async(ChatRoom.objects.get)(id=chatroom_id)
+        except ChatRoom.DoesNotExist:
+            await self.send(text_data=json.dumps({'error': 'Chat room not found'}))
+            return
+        count = await database_sync_to_async(
+            lambda: Message.objects.filter(
+                chatroom=room, is_read=False
+            ).exclude(sender=user).update(is_read=True)
+        )()
+
+        await self.send(text_data=json.dumps({
+            'type': 'mark_read_ack',
+            'marked_read': count
+        }))
+
         
         

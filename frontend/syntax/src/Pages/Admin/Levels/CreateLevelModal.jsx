@@ -1,12 +1,25 @@
 import axiosInstance from "@/api/axiosInstance"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { X, Hash, Zap } from "lucide-react"
 
-function CreateLevelModal({ isOpen, onClose, onSuccess }) {
+function CreateLevelModal({ isOpen, onClose, onSuccess,isEdit,initialData }) {
   const [number, setNumber] = useState("")
   const [xp, setXp] = useState("")
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
+
+  useEffect(()=>{
+    if(isOpen){
+      if(isEdit && initialData){
+        setNumber(initialData.number)
+        setXp(initialData.xp_threshold)
+      }else{
+        setNumber('')
+        setXp('')
+      }
+      setMessage('')
+    }
+  },[isEdit,initialData])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -14,22 +27,31 @@ function CreateLevelModal({ isOpen, onClose, onSuccess }) {
     setMessage("")
 
     try {
-      await axiosInstance.post("/profile/create-level/", {
-        number,
-        xp_threshold: xp,
-      })
+      if(isEdit && initialData){
+        await axiosInstance.put(`/profile/${initialData.id}/update-level/`,{
+          number,
+          xp_threshold: xp,
+        }).then(res=>console.log(res.data))
+        setMessage("Level updated successfully!")
+      }else{
+        await axiosInstance.post("/profile/create-level/", {
+          number,
+          xp_threshold: xp,
+        })
+        setMessage("Level created successfully!")
+      }
       setNumber("")
       setXp("")
-      setMessage("Level created successfully!")
       setTimeout(() => {
         onSuccess()
         onClose()
       }, 1500)
     } catch (err) {
       console.error("failed to create level", err)
-      setMessage("Failed to create level. Please try again.")
+      setMessage("Failed to submit level. Please try again.")
     } finally {
       setLoading(false)
+      
     }
   }
 
@@ -40,7 +62,7 @@ function CreateLevelModal({ isOpen, onClose, onSuccess }) {
       <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 flex justify-between items-center">
-          <h2 className="text-2xl font-bold">Create New Level</h2>
+          <h2 className="text-2xl font-bold">{isEdit?'Edit Level':'Create New Level'}</h2>
           <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-full transition-colors">
             <X size={20} />
           </button>
@@ -115,10 +137,10 @@ function CreateLevelModal({ isOpen, onClose, onSuccess }) {
                 {loading ? (
                   <span className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Creating...
+                    {isEdit ? "Updating..." : "Creating..."}
                   </span>
                 ) : (
-                  "Create Level"
+                  isEdit?"Update Level":"Create Level"
                 )}
               </button>
             </div>

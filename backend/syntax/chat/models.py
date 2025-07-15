@@ -33,6 +33,7 @@ class Message(models.Model):
     text = models.TextField(blank=True)
     attachment = models.FileField(upload_to='chat_attachments/', blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    is_read=models.BooleanField(default=False)
 
     def __str__(self):
         content = self.text if self.text else "[Attachment]"
@@ -43,6 +44,7 @@ class Membership(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     chatroom = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name="memberships")
     joined_at = models.DateTimeField(auto_now_add=True)
+    is_admin=models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('user', 'chatroom')

@@ -1,5 +1,5 @@
 from django.urls import path
-from challenge.views import ChallengeCreateView,ChallengeListView,ChallengeBlockView,ChallengeDetailView,RunChallengeView,SubmitChallengeView,SubmissionListView
+from challenge.views import ChallengeCreateView,ChallengeListView,ChallengeBlockView,ChallengeDetailView,RunChallengeView,SubmitChallengeView,SubmissionListView,ChallengeUpdateView
 
 urlpatterns = [
     path('create/',ChallengeCreateView.as_view(),name='create_challenge'),
@@ -9,5 +9,6 @@ urlpatterns = [
     path('run/',RunChallengeView.as_view(),name='run-challenge'),
     path('submit/',SubmitChallengeView.as_view(),name='submit-challenge'),
     path('<int:id>/submissions/',SubmissionListView.as_view(),name='submissions'),
+    path('<int:id>/update/',ChallengeUpdateView.as_view(),name='update_challenge'),
 
 ]

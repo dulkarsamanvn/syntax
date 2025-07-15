@@ -1,5 +1,5 @@
 from django.urls import path
-from premium.views import PremiumPlanCreateView,PremiumPlanListVIew,PremiumPlanOrderView,VerifyPaymentView,CheckSubscriptionView,MembershipHistoryView,CancelSubscriptionView
+from premium.views import PremiumPlanCreateView,PremiumPlanListVIew,PremiumPlanOrderView,VerifyPaymentView,CheckSubscriptionView,MembershipHistoryView,CancelSubscriptionView,PremiumPlanUpdateView
 
 urlpatterns = [
    path('create/',PremiumPlanCreateView.as_view(),name='create-plan'),
@@ -9,6 +9,7 @@ urlpatterns = [
    path('check-subscription/',CheckSubscriptionView.as_view(),name='check-subscription'),
    path('cancel-subscription/',CancelSubscriptionView.as_view(),name='cancel-subscription'),
    path('membership-history/',MembershipHistoryView.as_view(),name='membership-history'),
+   path('<int:id>/update/',PremiumPlanUpdateView.as_view(),name='update-plan'),
 
 
 ]

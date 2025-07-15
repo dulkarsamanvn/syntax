@@ -1,10 +1,8 @@
-"use client"
-
 import axiosInstance from "@/api/axiosInstance"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { X, Code, TestTube, Settings, Languages, Lightbulb, Clock } from "lucide-react"
 
-function CreateChallengeModal({ isOpen, onClose, onSuccess }) {
+function CreateChallengeModal({ isOpen, onClose, onSuccess,isEdit,challengeId,initialData }) {
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -28,6 +26,17 @@ function CreateChallengeModal({ isOpen, onClose, onSuccess }) {
 
   const [message, setMessage] = useState("")
   const [activeSection, setActiveSection] = useState("basic")
+
+  useEffect(()=>{
+    if(isEdit && initialData){
+      setForm({
+        ...form,
+        ...initialData,
+        start_time: initialData.start_time ? initialData.start_time.slice(0, 16) : "",
+        end_time: initialData.end_time ? initialData.end_time.slice(0, 16) : "",
+      })
+    }
+  },[isEdit,initialData])
 
   const languagesList = ["python", "c", "javascript", "cpp", "java"]
 
@@ -98,12 +107,17 @@ function CreateChallengeModal({ isOpen, onClose, onSuccess }) {
     }
 
     try {
-      await axiosInstance.post("/challenge/create/", cleanedForm)
-      setMessage("Challenge created successfully")
+      if(isEdit && challengeId){
+        await axiosInstance.patch(`/challenge/${challengeId}/update/`,cleanedForm)
+        setMessage('challenge updated successfully')
+      }else{
+        await axiosInstance.post("/challenge/create/", cleanedForm)
+        setMessage("Challenge created successfully")
+      }
       onSuccess()
       onClose()
     } catch (error) {
-      console.error("Challenge creation failed", error)
+      console.error("Challenge Submission failed", error)
       // setMessage("Failed to create challenge. Please try again.")
       if (error.response) {
         console.log("Backend error response:", error.response.data);
@@ -127,7 +141,7 @@ function CreateChallengeModal({ isOpen, onClose, onSuccess }) {
       <div className="bg-white w-full max-w-6xl h-[95vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 flex justify-between items-center">
-          <h2 className="text-3xl font-bold">Create New Challenge</h2>
+          <h2 className="text-3xl font-bold">{isEdit ? 'Edit Challenge' : 'Create New Challenge'}</h2>
           <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-full transition-colors">
             <X size={24} />
           </button>
@@ -565,7 +579,7 @@ function CreateChallengeModal({ isOpen, onClose, onSuccess }) {
                     type="submit"
                     className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium shadow-lg"
                   >
-                    Create Challenge
+                    {isEdit ? "Update Challenge" : "Create Challenge"}
                   </button>
                 </div>
               </form>

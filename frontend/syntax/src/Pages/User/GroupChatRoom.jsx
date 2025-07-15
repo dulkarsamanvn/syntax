@@ -21,6 +21,7 @@ function GroupChatRoom() {
   const [selectedMessageId, setSelectedMessageId] = useState(null)
   const typingTimeoutRef = useRef(null)
   const messagesEndRef = useRef(null)
+  const roomIdRef=useRef(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -68,6 +69,8 @@ function GroupChatRoom() {
     ws.onopen = () => {
       console.log("WebSocket connected!")
       setIsConnected(true)
+      roomIdRef.current = id
+      
     }
     ws.onmessage = (e) => {
       const data = JSON.parse(e.data)
@@ -83,6 +86,12 @@ function GroupChatRoom() {
           setMessages((prev) => prev.filter((msg) => msg.message_id !== data.message_id))
         } else {
           setMessages((prev) => [...prev, data])
+          if (id) {
+            axiosInstance.post("/chat/mark-as-read/", { chatroom_id: id })
+              .then(() => console.log("Group message marked as read"))
+              .catch((err) => console.error("Mark-as-read failed", err))
+          }
+
         }
       }
     }
@@ -102,6 +111,18 @@ function GroupChatRoom() {
       }
     }
   }, [id, currentUserId])
+
+  useEffect(() => {
+    if (id && currentUserId) {
+      axiosInstance
+        .post("/chat/mark-as-read/", { chatroom_id: id })
+        .then(() => console.log("Group messages marked as read"))
+        .catch((err) => console.error("Failed to mark group messages as read", err))
+    }
+  }, [id, currentUserId])
+
+  
+
 
   const sendMessage = () => {
     if (!input.trim()) return
@@ -190,6 +211,19 @@ function GroupChatRoom() {
       }
     } catch (err) {
       console.error("failed to add member", err)
+    }
+  }
+
+  const handleMakeAdmin=async(userId)=>{
+    try{
+      const res=await axiosInstance.post(`/chat/group-details/${id}/make-admin`,{user_id:userId})
+      if(res.data.success){
+        setMembers((prev)=>
+          prev.map((m)=>(m.id===userId ? {...m,is_admin:true}:m))
+        )
+      }
+    }catch(err){
+      console.error('failed to make user admin',err)
     }
   }
 
@@ -303,7 +337,7 @@ function GroupChatRoom() {
                             msg.sender_id === currentUserId ? "text-right" : "text-left"
                           }`}
                         >
-                          {new Date(msg.timestamp).toLocaleTimeString()}
+                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       )}
                     </div>
@@ -427,18 +461,29 @@ function GroupChatRoom() {
                           <div>
                             <p className="text-white text-sm font-medium flex items-center gap-1">
                               {member.username}
-                              {member.id === groupDetails.creator && <Crown className="w-3 h-3 text-yellow-400" />}
+                              {member.is_admin && <Crown className="w-3 h-3 text-yellow-400" />}
                             </p>
                             <p className="text-white/50 text-xs">{member.email}</p>
                           </div>
                         </div>
-                        {currentUserId === groupDetails.creator && currentUserId !== member.id && (
+                        {members.find(m => m.id === currentUserId)?.is_admin && currentUserId !== member.id &&(
+                          <div className="flex gap-2">
+                            <button  onClick={()=>handleMakeAdmin(member.id)}
+                              disabled={member.is_admin}
+                              className={`p-1 rounded transition-all duration-200 text-xs ${
+                                member.is_admin
+                                  ? 'text-gray-400 cursor-not-allowed opacity-50'
+                                  : 'text-yellow-400 hover:bg-yellow-400/20'
+                              }`}>
+                              Make Admin
+                            </button>
                           <button
                             onClick={() => handleRemoveMember(member.id)}
                             className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-all duration-200"
                           >
                             <X className="w-4 h-4" />
                           </button>
+                          </div>
                         )}
                       </div>
                     ))}
@@ -446,7 +491,7 @@ function GroupChatRoom() {
                 </div>
 
                 {/* Add Member Section (Only for group creator) */}
-                {currentUserId === groupDetails.creator && (
+                {members.find(m => m.id === currentUserId)?.is_admin && (
                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                     <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
                       <UserPlus className="w-5 h-5" />

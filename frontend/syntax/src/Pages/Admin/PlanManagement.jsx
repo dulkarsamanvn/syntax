@@ -5,6 +5,8 @@ import { useEffect, useState } from "react"
 
 function PlanManagement() {
   const [plans, setPlans] = useState([])
+  const [isEdit,setIsEdit]=useState(false)
+  const [editPlanData,setEditPlanData]=useState(null)
   const [showModal, setShowModal] = useState(false)
   const [newPlan, setNewPlan] = useState({
     name: "",
@@ -27,18 +29,31 @@ function PlanManagement() {
 
   const handleCreatePlan = async () => {
     try {
-      const res = await axiosInstance.post("/premium/create/", newPlan)
-      setPlans((prev) => [...prev, res.data])
+      if(isEdit && editPlanData){
+        const res=await axiosInstance.put(`/premium/${editPlanData.id}/update/`,newPlan)
+        setPlans((prev)=>
+        prev.map((p)=>(p.id===editPlanData.id ? res.data:p)))
+      }else{
+        const res = await axiosInstance.post("/premium/create/", newPlan)
+        setPlans((prev) => [...prev, res.data])
+      }
       setShowModal(false)
       setNewPlan({ name: "", description: "", price: "", duration_days: "" })
+      setIsEdit(false)
+      setEditPlanData(null)
     } catch (err) {
       console.error("error creating plan", err)
     }
   }
 
   const handleEditPlan = (planId) => {
-    // TODO: Implement edit functionality
-    console.log("Edit plan:", planId)
+    const planToEdit=plans.find((p)=>p.id===planId)
+    if(planToEdit){
+      setIsEdit(true)
+      setEditPlanData(planToEdit)
+      setNewPlan(planToEdit)
+      setShowModal(true)
+    }
   }
 
   const handleBanPlan = async (planId) => {
@@ -118,7 +133,7 @@ function PlanManagement() {
               {/* Header */}
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-bold">Create New Plan</h3>
+                  <h3 className="text-xl font-bold">{isEdit ? 'Update Plan' : 'Create New Plan'}</h3>
                 </div>
               </div>
 
@@ -172,7 +187,12 @@ function PlanManagement() {
                 {/* Footer Buttons */}
                 <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-gray-200">
                   <button
-                    onClick={() => setShowModal(false)}
+                    onClick={() => {
+                      setShowModal(false)
+                      setIsEdit(false)
+                      setEditPlanData(null)
+                      setNewPlan({ name: "", description: "", price: "", duration_days: "" })
+                    }}
                     className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                   >
                     Cancel
@@ -181,7 +201,7 @@ function PlanManagement() {
                     onClick={handleCreatePlan}
                     className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium shadow-lg"
                   >
-                    Create Plan
+                    {isEdit?'Update Plan' : 'Create Plan'}
                   </button>
                 </div>
               </div>

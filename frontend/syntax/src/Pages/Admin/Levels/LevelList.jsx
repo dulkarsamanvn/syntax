@@ -8,6 +8,7 @@ import axiosInstance from "@/api/axiosInstance"
 function LevelList() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [levels, setLevels] = useState([])
+  const [selectedLevel,setSelectedLevel]=useState(null)
 
   useEffect(() => {
     fetchLevels()
@@ -56,6 +57,10 @@ function LevelList() {
                     <Crown className="w-4 h-4 text-yellow-400" />
                   </div>
                   <button
+                    onClick={()=>{
+                      setSelectedLevel(level)
+                      setIsModalOpen(true)
+                    }}
                     className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
                     title="Edit Level">
                     <Edit size={16} />
@@ -67,7 +72,16 @@ function LevelList() {
           </div>
         </div>
       </div>
-      <CreateLevelModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSuccess={handleLevelCreated} />
+      <CreateLevelModal
+       isOpen={isModalOpen} 
+       onClose={() =>{
+         setIsModalOpen(false)
+         setSelectedLevel(null)
+        }} 
+       onSuccess={handleLevelCreated} 
+       isEdit={Boolean(selectedLevel)}
+       initialData={selectedLevel}
+       />
     </div>
   )
 }

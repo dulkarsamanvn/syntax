@@ -22,7 +22,7 @@ const menuItems = [
   { name: "Challenge Management", icon: Trophy, path: "/admin/challenge-management" },
   { name: "Level Management", icon: BarChart3, path: "/admin/level-management" },
   { name: "Plans Management", icon: CreditCard, path: "/admin/plan-management" },
-  { name: "Report Management", icon: FileText, path: "#" },
+  { name: "Report Management", icon: FileText, path: "/admin/report-management" },
   { name: "Group Management", icon: UserCheck, path: "#" },
   { name: "Badge Management", icon: Award, path: "#" },
   { name: "Notify Management", icon: Bell, path: "#" },

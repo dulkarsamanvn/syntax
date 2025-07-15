@@ -21,6 +21,24 @@ class PremiumPlanCreateView(APIView):
             return Response(serializer.data,status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
+class PremiumPlanUpdateView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def put(self,request,id):
+        print("request reached")
+        try:
+            plan=PremiumPlan.objects.get(id=id)
+        except PremiumPlan.DoesNotExist:
+            return Response({'error':'plan not found'},status=status.HTTP_404_NOT_FOUND)
+        
+        serializer=PremiumPlanSerializer(plan,data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        
+
+
 class PremiumPlanListVIew(APIView):
     permission_classes=[IsAuthenticated]
 

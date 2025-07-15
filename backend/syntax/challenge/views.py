@@ -9,6 +9,7 @@ import requests
 import json,time
 from challenge.utils import format_input_args
 from django.db.models import Count,Avg
+from django.core.paginator import Paginator
 # Create your views here.
 
 class ChallengeCreateView(APIView):
@@ -26,20 +27,82 @@ class ChallengeCreateView(APIView):
             return Response({"message": "Challenge created successfully!"},status=status.HTTP_201_CREATED)
         print("Validation Errors:", serializer.errors)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-    
+
+
+class ChallengeUpdateView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def patch(self,request,id):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {'detail': 'You do not have permission to perform this action.'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        challenge=Challenge.objects.get(id=id)
+        serializer=ChallengeSerializer(challenge,data=request.data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message':'challenge updated successfully'},status=status.HTTP_200_OK)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        
+
+  
+# class ChallengeListView(APIView):
+#     permission_classes=[IsAuthenticated]
+
+#     def get(self,request):
+#         user=request.user
+#         if user.is_staff or user.is_superuser:
+#             challenges=Challenge.objects.all().order_by('-created_at')
+#         else:
+#             challenges=Challenge.objects.filter(is_active=True).order_by('-created_at')
+
+#         challenge_list=[]
+
+#         for challenge in challenges:
+#             is_completed=Submission.objects.filter(user=user,challenge=challenge,is_completed=True).exists()
+#             total_attempts=Submission.objects.filter(challenge=challenge).count()
+#             completed_users_count=Submission.objects.filter(challenge=challenge,is_completed=True).values('user').distinct().count()
+#             if total_attempts > 0:
+#                 success_rate=round((completed_users_count/total_attempts)*100,2)
+#             else:
+#                 success_rate=0.0
+#             serializer=ChallengeSerializer(challenge,context={'request':request})
+#             challenge_data=serializer.data
+#             challenge_data['is_completed']=is_completed
+#             challenge_data['success_rate']=success_rate
+#             challenge_data['completed_users']=completed_users_count
+
+#             challenge_list.append(challenge_data)
+#         return Response(challenge_list)
+
 class ChallengeListView(APIView):
     permission_classes=[IsAuthenticated]
 
     def get(self,request):
         user=request.user
-        if user.is_staff or user.is_superuser:
+        is_admin=user.is_staff or user.is_superuser
+
+        if is_admin:
             challenges=Challenge.objects.all().order_by('-created_at')
         else:
             challenges=Challenge.objects.filter(is_active=True).order_by('-created_at')
 
+        if is_admin:
+            page=int(request.GET.get('page',1))
+            page_size=int(request.GET.get('page_size',10))
+            paginator=Paginator(challenges,page_size)
+            page_obj=paginator.get_page(page)
+            paginated_challenges=page_obj.object_list
+            total_count = paginator.count
+        else:
+            paginated_challenges=challenges
+            total_count = challenges.count()
+
         challenge_list=[]
 
-        for challenge in challenges:
+        for challenge in paginated_challenges:
             is_completed=Submission.objects.filter(user=user,challenge=challenge,is_completed=True).exists()
             total_attempts=Submission.objects.filter(challenge=challenge).count()
             completed_users_count=Submission.objects.filter(challenge=challenge,is_completed=True).values('user').distinct().count()
@@ -54,7 +117,13 @@ class ChallengeListView(APIView):
             challenge_data['completed_users']=completed_users_count
 
             challenge_list.append(challenge_data)
-        return Response(challenge_list)
+        
+        return Response({
+            'results':challenge_list,
+            'count':total_count
+        },status=status.HTTP_200_OK)
+        
+
 
 
 class ChallengeBlockView(APIView):

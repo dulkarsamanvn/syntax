@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from chat.models import ChatRoom,Membership,Group
 from chat.serializers import ChatRoomListSerializer,GroupSerializer,UserSerializer
 from rest_framework import status
+from django.utils import timezone
 # Create your views here.
 
 class CreateOrGetRoomView(APIView):
@@ -74,10 +75,10 @@ class CreateGroupView(APIView):
             group=group
         )
 
-        Membership.objects.create(user=request.user,chatroom=chatroom)
+        Membership.objects.create(user=request.user,chatroom=chatroom,is_admin=True)
 
         for user in users:
-            Membership.objects.get_or_create(user=user,chatroom=chatroom)
+            Membership.objects.get_or_create(user=user,chatroom=chatroom,defaults={'is_admin': False, 'joined_at': timezone.now()})
         
         return Response({
             "message": "Group created successfully",
@@ -93,10 +94,17 @@ class GroupDetailsView(APIView):
         try:
             chatroom=ChatRoom.objects.get(id=chatroom_id)
             group=chatroom.group
-            members=[m.user for m in chatroom.memberships.select_related('user')]
+            # members=[m.user for m in chatroom.memberships.select_related('user')]
+            memberships=chatroom.memberships.select_related('user').all()
+
+            members=[]
+            for membership in memberships:
+                user_data=UserSerializer(membership.user).data
+                user_data['is_admin']=membership.is_admin
+                members.append(user_data)
             return Response({
                 'group':GroupSerializer(group).data,
-                'members':UserSerializer(members,many=True).data
+                'members':members
             })
         except ChatRoom.DoesNotExist:
             return Response({'error':'Chatroom Not Found'},status=status.HTTP_404_NOT_FOUND)
@@ -111,6 +119,12 @@ class RemoveGroupMemberView(APIView):
         try:
             chatroom=ChatRoom.objects.get(id=chatroom_id)
             group=chatroom.group
+            current_membership=Membership.objects.get(user=request.user,chatroom=chatroom)
+            if not current_membership.is_admin:
+                return Response({'error': 'Only admins can remove members'},status=status.HTTP_403_FORBIDDEN)
+            user_to_remove=User.objects.get(id=user_id)
+            if user_to_remove==group.creator:
+                return Response({'error': 'Cannot remove group creator'},status=status.HTTP_400_BAD_REQUEST)
             membership=Membership.objects.get(user_id=user_id,chatroom=chatroom)
             membership.delete()
             return Response({'success':True})
@@ -151,15 +165,73 @@ class AddGroupMemberView(APIView):
             chatroom=ChatRoom.objects.get(id=chatroom_id)
             group=chatroom.group
 
-            if not request.user == group.creator:
-                return Response({'error': 'Only the group creator can add members'}, status=403)
+            current_membership = Membership.objects.get(user=request.user, chatroom=chatroom)
+            if not current_membership.is_admin:
+                return Response({'error': 'Only admins can add members'}, status=status.HTTP_403_FORBIDDEN)
+
+            # if not request.user == group.creator:
+            #     return Response({'error': 'Only the group creator can add members'}, status=403)
             if chatroom.memberships.count() >= group.member_limit:
                 return Response({'error': 'Group member limit reached'}, status=400)
             user=User.objects.get(id=user_id)
-            Membership.objects.create(user=user,chatroom=chatroom)
+            # Membership.objects.create(user=user,chatroom=chatroom)
+            membership,created=Membership.objects.get_or_create(
+                user=user,
+                chatroom=chatroom,
+                defaults={'is_admin': False, 'joined_at': timezone.now()}
+            )
+            if not created:
+                return Response({'error': 'User is already a member'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            user_data=UserSerializer(user).data
+            user_data['is_admin']=membership.is_admin
             return Response({
                 'success':True,
-                'user':UserSerializer(user).data
+                'user':user_data
             })
         except ChatRoom.DoesNotExist:
             return Response({'error': 'Chatroom or User not found'}, status=404)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Membership.DoesNotExist:
+            return Response({'error': 'You are not a member of this group'}, status=status.HTTP_403_FORBIDDEN)
+
+
+class MarkUnreadMessagesView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def post(self,request):
+        chatroom_id=request.data.get('chatroom_id')
+        user=request.user
+
+        try:
+            chatroom=ChatRoom.objects.get(id=chatroom_id,participants=user)
+        except ChatRoom.DoesNotExist:
+            return Response({'error':'chatroom not found'},status=status.HTTP_404_NOT_FOUND)
+        count=chatroom.messages.filter(is_read=False).exclude(sender=user).update(is_read=True)
+        return Response({'marked_read':count})
+
+
+class MakeAdminView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def post(self,request,id):
+        user_id=request.data.get('user_id')
+        try:
+            chatroom=ChatRoom.objects.get(id=id)
+            if not Membership.objects.filter(chatroom=chatroom,user=request.user,is_admin=True).exists():
+                return Response({'error':'Only admins can promote members'},status=status.HTTP_403_FORBIDDEN)
+            user_to_promote = User.objects.get(id=user_id)
+            membership=Membership.objects.get(chatroom=chatroom,user=user_to_promote)
+            membership.is_admin=True
+            membership.save()
+
+            user_data = UserSerializer(user_to_promote).data
+            user_data['is_admin'] = True
+            return Response({'success': True, 'message': 'user promoted to admin','user': user_data}, status=status.HTTP_200_OK)
+        except ChatRoom.DoesNotExist:
+            return Response({'error':'chatroom not found'},status=status.HTTP_404_NOT_FOUND)
+        except Membership.DoesNotExist:
+            return Response({'error':'user is not a member'},status=status.HTTP_404_NOT_FOUND)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)

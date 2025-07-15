@@ -67,7 +67,7 @@ export default function Home() {
     const fetchChallenges = async () => {
       try {
         const res = await axiosInstance.get("/challenge/list/")
-        setChallenges(res.data)
+        setChallenges(res.data.results)
       } catch (err) {
         console.error("error fetching challenges", err)
       }

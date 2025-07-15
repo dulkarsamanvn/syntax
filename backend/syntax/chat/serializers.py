@@ -15,10 +15,11 @@ class ChatRoomListSerializer(serializers.ModelSerializer):
     is_group=serializers.BooleanField()
     last_message=serializers.SerializerMethodField()
     last_message_time=serializers.SerializerMethodField()
+    unread_count=serializers.SerializerMethodField()
 
     class Meta:
         model=ChatRoom
-        fields=['id','other_user','is_group','group_name','group_description','last_message','last_message_time']
+        fields=['id','other_user','is_group','group_name','group_description','last_message','last_message_time','unread_count']
 
     
     def get_other_user(self,obj):
@@ -39,6 +40,10 @@ class ChatRoomListSerializer(serializers.ModelSerializer):
     
     def get_last_message_time(self,obj):
         return obj.last_message.timestamp if obj.last_message else None
+    
+    def get_unread_count(self,obj):
+        user=self.context['request'].user
+        return obj.messages.filter(is_read=False).exclude(sender=user).count()
     
 
 

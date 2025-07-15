@@ -15,6 +15,7 @@ function ChatRoom() {
   const [selectedMessageId, setSelectedMessageId] = useState(null)
   const typingTimeoutRef = useRef(null)
   const roomIdRef = useRef()
+  const messagesEndRef=useRef(null)
   const navigate = useNavigate()
 
 
@@ -73,6 +74,12 @@ function ChatRoom() {
                 setMessages((prev) => prev.filter((msg) => msg.message_id !== data.message_id))
               } else {
                 setMessages((prev) => [...prev, data])
+
+                if(roomIdRef.current){
+                  axiosInstance.post("/chat/mark-as-read/", { chatroom_id: roomIdRef.current })
+                  .then(() => console.log("Marked as read"))
+                  .catch((err)=>console.error("Mark-as-read failed", err))
+                }
               }
             }
           } catch (err) {
@@ -107,8 +114,14 @@ function ChatRoom() {
     }
   }, [userId, currentUserId])
 
+  
+
+  useEffect(()=>{
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  },[messages])
+
   const sendMessage = () => {
-    if (currentUserId === null) {
+    if (currentUserId === null || !socket || socket.readyState !== WebSocket.OPEN) {
       console.log("currentUserId is null, cannot send.")
       setError("User not authenticated")
       return
@@ -292,7 +305,7 @@ function ChatRoom() {
                             msg.sender_id == currentUserId ? "text-right" : "text-left"
                           }`}
                         >
-                          {new Date(msg.timestamp).toLocaleTimeString()}
+                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       )}
                     </div>
@@ -322,6 +335,7 @@ function ChatRoom() {
                 )}
               </>
             )}
+            <div ref={messagesEndRef} />
           </div>
         </div>
 

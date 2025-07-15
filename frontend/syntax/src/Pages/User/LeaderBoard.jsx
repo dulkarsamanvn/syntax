@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { Award, MessageSquare, Bell, Search, Trophy, Medal, Crown, Zap, Flame, ChevronLeft, ChevronRight, X, Shield, MessageCircle, CircleAlert } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import Spinner from '@/Components/Spinner'
+import ReportModal from '@/Components/ReportModal'
 
 function LeaderBoard() {
     const [users, setUsers] = useState([])
@@ -15,6 +16,7 @@ function LeaderBoard() {
     const [selectedUser, setSelectedUser] = useState(null)
     const [showModal, setShowModal] = useState(null)
     const [currentUserId, setCurrentUserId] = useState(null)
+    const [showReportModal, setShowReportModal] = useState(false)
     const navigate = useNavigate()
 
     const USERS_PER_PAGE = 10
@@ -151,7 +153,7 @@ function LeaderBoard() {
         setShowModal(false)
     }
 
-    const handleMessage=(userId)=>{
+    const handleMessage = (userId) => {
         navigate(`/chat/${userId}`)
     }
 
@@ -411,14 +413,14 @@ function LeaderBoard() {
                         {/* Actions */}
                         <div className="flex gap-3 p-6 pt-0 border-t border-gray-200">
                             <button
-                                onClick={() =>handleMessage(selectedUser.id)}
+                                onClick={() => handleMessage(selectedUser.id)}
                                 className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium transition-all shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                             >
                                 <MessageCircle size={18} />
                                 Message
                             </button>
                             <button
-                                // onClick={() => handleBlock?.(selectedUser.id)}
+                                onClick={() => setShowReportModal(true)}
                                 className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-medium transition-all shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                             >
                                 <CircleAlert size={18} />
@@ -428,7 +430,13 @@ function LeaderBoard() {
                     </div>
                 </div>
             )}
-
+            {showReportModal && selectedUser && (
+                <ReportModal
+                    show={showReportModal}
+                    onclose={() => setShowReportModal(false)}
+                    reportedUserId={selectedUser.id}
+                />
+            )}
         </div>
     )
 }
