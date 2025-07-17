@@ -119,9 +119,12 @@ class VerifyPaymentView(APIView):
         
         UserSubscription.objects.update_or_create(
             user=user,
-            plan=plan,
-            start_date=timezone.now(),
-            end_date= timezone.now() + timedelta(days=plan.duration_days)
+            defaults={
+            'plan':plan,
+            'start_date':timezone.now(),
+            'end_date': timezone.now() + timedelta(days=plan.duration_days),
+            'cancelled':False
+            }
         )
 
         user.is_premium=True
@@ -142,7 +145,8 @@ class CheckSubscriptionView(APIView):
                 "plan_name": subscription.plan.name,
                 "end_date": subscription.end_date,
                 'start_date':subscription.start_date,
-                'remaining_days':subscription.remaining_days()
+                'remaining_days':subscription.remaining_days(),
+                'cancelled':subscription.cancelled
             })
         return Response({'is_premium':False})
 
@@ -154,20 +158,9 @@ class CancelSubscriptionView(APIView):
         subscription=getattr(request.user,'subscription',None)
 
         if subscription and not subscription.has_expired():
-            SubscriptionHistory.objects.create(
-                user=request.user,
-                plan=subscription.plan,
-                start_date=subscription.start_date,
-                end_date=timezone.now(),
-                price=subscription.plan.price
-            )
-            subscription.end_date=timezone.now()
+            subscription.cancelled=True
             subscription.save()
-
-            request.user.is_premium=False
-            request.user.save()
-
-            return Response({'message':'Subscription cancelled'},status=status.HTTP_200_OK)
+            return Response({'message':'Subscription cancelled. Access remains until expiry.'},status=status.HTTP_200_OK)
         return Response({'error':'no active subscription'},status=status.HTTP_400_BAD_REQUEST)
 
 

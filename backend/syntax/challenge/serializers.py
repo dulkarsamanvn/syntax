@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from challenge.models import Challenge,Submission
+from challenge.models import Challenge,Submission,Solutions
 
 class ChallengeSerializer(serializers.ModelSerializer):
 
@@ -37,3 +37,12 @@ class SubmissionListSerializer(serializers.ModelSerializer):
             "xp_awarded",
             "created_at"
         ]
+
+
+
+class SolutionSerializer(serializers.ModelSerializer):
+    username=serializers.CharField(source='user.username',read_only=True)
+    class Meta:
+        model=Solutions
+        fields = ['id', 'challenge', 'user', 'username', 'description', 'code', 'language', 'created_at']
+        read_only_fields = ['user','challenge']

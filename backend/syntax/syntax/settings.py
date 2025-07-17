@@ -214,3 +214,4 @@ RAZORPAY_KEY_SECRET=config('RAZORPAY_KEY_SECRET')
 
 
 
+CELERY_BROKER_URL = 'redis://localhost:6379/0'

@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react'
 import axiosInstance from '../../api/axiosInstance'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Search, Bell, MessageSquare, Clock, Code2, Users, Zap, Settings, BarChart3 } from "lucide-react"
+import { format } from "date-fns"
+
 
 function UserProfile() {
   const [user, setUser] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [xpHistory,setXpHistory]=useState([])
   
   const navigate = useNavigate()
   const location=useLocation()
@@ -25,6 +28,18 @@ function UserProfile() {
       setLoading(false)
     }
   }
+
+  useEffect(()=>{
+    const fetchXpHistory=async()=>{
+      try{
+        const res=await axiosInstance.get('/profile/xp-history/')
+        setXpHistory(res.data)
+      }catch(err){
+        console.error('error fetching xp history',err)
+      }
+    }
+    fetchXpHistory()
+  },[])
 
   const handleRedirect = () => {
     navigate('/home')
@@ -290,6 +305,33 @@ function UserProfile() {
                 <p className="text-slate-400 text-sm">
                   {user.xp || 0} / {user.xp_for_next_level || 500} XP to Level {(user.level || 0) + 1}
                 </p>
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">XP Credit History</h3>
+                  {xpHistory.length === 0 ? (
+                    <p className="text-slate-400">No XP history found.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {xpHistory.map((item) => (
+                        <div
+                          key={item.id}
+                          className="bg-slate-700/50 rounded-lg p-4 shadow-sm border border-slate-600"
+                        >
+                          <div className="flex justify-between items-center mb-0">
+                            <span className="text-green-400 font-bold text-sm">+{item.xp_awarded} XP</span>
+                            <span className="text-slate-400 text-sm">
+                              {item.challenge_title}
+                              {/* {format(new Date(item.created_at), "PPP p")} */}
+                            </span>
+                          </div>
+                          {/* <p className="text-slate-300 text-sm">
+                            For completing: <span className="font-medium">{item.challenge_title}</span>
+                          </p> */}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
               </div>
             )}
 

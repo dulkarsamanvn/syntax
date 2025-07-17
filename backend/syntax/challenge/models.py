@@ -56,3 +56,15 @@ class Submission(models.Model):
 
     class Meta:
         ordering=['-created_at']
+
+
+class Solutions(models.Model):
+    challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE, related_name='solutions')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    description = models.TextField()
+    code = models.TextField()
+    language = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s solution to {self.challenge.title}"

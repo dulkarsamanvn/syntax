@@ -18,6 +18,7 @@ class UserSubscription(models.Model):
     plan=models.ForeignKey(PremiumPlan,on_delete=models.SET_NULL, null=True)
     start_date=models.DateTimeField(auto_now_add=True)
     end_date=models.DateTimeField()
+    cancelled=models.BooleanField(default=False)
 
     def has_expired(self):
         return timezone.now() > self.end_date

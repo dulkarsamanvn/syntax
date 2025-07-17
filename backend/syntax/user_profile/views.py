@@ -2,10 +2,11 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from user_profile.serializers import UserProfileSerializer,LevelSerializer
+from user_profile.serializers import UserProfileSerializer,LevelSerializer,XpHistorySerializer
 from rest_framework.parsers import MultiPartParser,FormParser
 from rest_framework import status
 from user_profile.models import Level
+from challenge.models import Submission
 
 # Create your views here.
 
@@ -62,3 +63,12 @@ class LevelUpdateView(APIView):
             return Response({'message':'level updated successfully'},status=status.HTTP_200_OK)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
+
+
+class XpHistoryView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def get(self,request):
+        submissions=Submission.objects.filter(user=request.user,xp_awarded__gt=0).order_by('-created_at')
+        serializer=XpHistorySerializer(submissions,many=True)
+        return Response(serializer.data)

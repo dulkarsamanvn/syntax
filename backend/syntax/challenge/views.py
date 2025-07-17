@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from challenge.serializers import ChallengeSerializer,SubmissionSerializer,SubmissionListSerializer
+from challenge.serializers import ChallengeSerializer,SubmissionSerializer,SubmissionListSerializer,SolutionSerializer
 from rest_framework.response import Response
 from rest_framework import status
-from challenge.models import Challenge,Submission
+from challenge.models import Challenge,Submission,Solutions
 import requests
 import json,time
 from challenge.utils import format_input_args
@@ -494,3 +494,53 @@ class SubmissionListView(APIView):
         submissions=Submission.objects.filter(user=user,challenge_id=id)
         serializer=SubmissionListSerializer(submissions,many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
+    
+
+class CreateSolutionView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def post(self,request,challenge_id):
+        print("request reached")
+        challenge=Challenge.objects.get(id=challenge_id)
+        serializer=SolutionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user,challenge=challenge)
+            return Response(serializer.data,status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+class SolutionListView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def get(self,request,challenge_id):
+        solutions=Solutions.objects.filter(challenge__id=challenge_id).order_by('-created_at')
+        serializer=SolutionSerializer(solutions,many=True)
+        return Response(serializer.data)
+
+class SolutionDeleteView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def delete(self,request,challenge_id,solution_id):
+        try:
+            solution=Solutions.objects.get(id=solution_id,challenge__id=challenge_id,user=request.user)
+        except Solutions.DoesNotExist:
+            return Response({'error':'Solution not found'},status=status.HTTP_404_NOT_FOUND)
+        solution.delete()
+        return Response({'detail': 'Solution deleted'}, status=status.HTTP_204_NO_CONTENT)
+
+
+class SolutionEditView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def put(self,request,challenge_id,solution_id):
+        print("request reached")
+        try:
+            solution=Solutions.objects.get(id=solution_id,challenge__id=challenge_id,user=request.user)
+        except Solutions.DoesNotExist:
+            return Response({'error':'solution not found'},status=status.HTTP_404_NOT_FOUND)
+        serializer=SolutionSerializer(solution,data=request.data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data,status=status.HTTP_200_OK)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+

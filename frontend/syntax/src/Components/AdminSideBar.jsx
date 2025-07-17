@@ -14,6 +14,7 @@ import {
   LogOut,
   Menu,
   X,
+  AwardIcon
 } from "lucide-react"
 
 const menuItems = [
@@ -21,6 +22,7 @@ const menuItems = [
   { name: "Users Management", icon: Users, path: "/admin/user-management" },
   { name: "Challenge Management", icon: Trophy, path: "/admin/challenge-management" },
   { name: "Level Management", icon: BarChart3, path: "/admin/level-management" },
+  { name: "Leaderboard", icon: AwardIcon, path: "/admin/leaderboard" },
   { name: "Plans Management", icon: CreditCard, path: "/admin/plan-management" },
   { name: "Report Management", icon: FileText, path: "/admin/report-management" },
   { name: "Group Management", icon: UserCheck, path: "#" },

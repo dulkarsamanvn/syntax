@@ -26,6 +26,7 @@ import GroupChatRoom from './Pages/User/GroupChatRoom'
 import PlanManagement from './Pages/Admin/PlanManagement'
 import Premium from './Pages/User/Premium'
 import ReportManagement from './Pages/Admin/ReportManagement'
+import LeaderboardManagement from './Pages/Admin/LeaderboardManagement'
 
 function App() {
   return (
@@ -117,6 +118,11 @@ function App() {
         <Route path='/admin/report-management' element={
           <AdminProtectedRoute>
             <ReportManagement/>
+          </AdminProtectedRoute>} />
+        
+        <Route path='/admin/leaderboard' element={
+          <AdminProtectedRoute>
+            <LeaderboardManagement/>
           </AdminProtectedRoute>} />
 
       </Routes>

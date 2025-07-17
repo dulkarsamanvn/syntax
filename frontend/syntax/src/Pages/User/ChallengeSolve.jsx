@@ -39,50 +39,61 @@ function ChallengeSolve() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showCompletionModal, setShowCompletionModal] = useState(false)
   const [completionData, setCompletionData] = useState(null)
-  const [submissions,setSubmissions]=useState([])
-  const [userId,setUserId]=useState(null)
+  const [submissions, setSubmissions] = useState([])
+  const [userId, setUserId] = useState(null)
+  const [showSolutionModal, setShowSolutionModal] = useState(false)
+  const [solutionDescription, setSolutionDescription] = useState('')
+  const [solutionCode, setSolutionCode] = useState('')
+  const [solutionLanguage, setSolutionLanguage] = useState('python')
+  const [solutions, setSolutions] = useState([])
+  const [editingSolution,setEditingSolution]=useState(null)
+  const [editingSolutionDescription,setEditingSolutionDescription]=useState('')
+  const [editingSolutionCode,setEditingSolutionCode]=useState('')
+  const [editingSolutionLanguage,setEditingSolutionLanguage]=useState('')
+  const [showDeleteModal,setShowDeleteModal]=useState(false)
+  const [solutionToDelete,setSolutionToDelete]=useState(null)
 
 
-  useEffect(()=>{
-    const fetchUserProfile=async()=>{
-      try{
-        const res=await axiosInstance.get('/profile/')
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const res = await axiosInstance.get('/profile/')
         setUserId(res.data.id || res.data.username)
-      }catch(err){
-        console.error("error fetching profile",err)
+      } catch (err) {
+        console.error("error fetching profile", err)
       }
     }
 
     fetchUserProfile()
-  },[])
+  }, [])
 
   useEffect(() => {
     const fetchChallenge = async () => {
       try {
         const res = await axiosInstance.get(`/challenge/${id}/`)
         setChallenge(res.data)
-        if(userId){
+        if (userId) {
           const savedCode = localStorage.getItem(`challenge_code_${res.data.id}_python_${userId}`)
-          if(savedCode && savedCode.trim() !==''){
+          if (savedCode && savedCode.trim() !== '') {
             setCode(savedCode)
-          }else{
+          } else {
             setCode(res.data.initial_code?.["python"] || "")
           }
-        }else{
+        } else {
           setCode(res.data.initial_code?.["python"] || "")
         }
         setTimeLeft(res.data.time_limit * 60)
       } catch (err) {
         console.error("error fetching challenge", err)
-        if(err.response?.status === 403){
+        if (err.response?.status === 403) {
           navigate('/home')
-        }else if(err.response?.status === 404){
+        } else if (err.response?.status === 404) {
           navigate('/home')
         }
       }
     }
     fetchChallenge()
-  }, [id,userId])
+  }, [id, userId])
 
   useEffect(() => {
     if (!timerActive || timeLeft <= 0) return
@@ -98,20 +109,78 @@ function ChallengeSolve() {
     return () => clearInterval(interval)
   }, [timerActive, timeLeft])
 
-  useEffect(()=>{
-    const fetchSubmissions=async()=>{
-      try{
-        const res=await axiosInstance.get(`/challenge/${id}/submissions/`)
+  useEffect(() => {
+    const fetchSubmissions = async () => {
+      try {
+        const res = await axiosInstance.get(`/challenge/${id}/submissions/`)
         setSubmissions(res.data)
-      }catch(err){
-        console.error("error fetching submission",err)
+      } catch (err) {
+        console.error("error fetching submission", err)
       }
     }
-    if(activeTab==='submissions'){
+    if (activeTab === 'submissions') {
       fetchSubmissions()
     }
-      
-  },[id,activeTab])
+
+  }, [id, activeTab])
+
+  const fetchSolutions = async () => {
+    try {
+      const res = await axiosInstance.get(`/challenge/${id}/solutions/`)
+      setSolutions(res.data)
+
+    } catch (err) {
+      console.error('error fetching solutions', err)
+    }
+  }
+
+
+  useEffect(() => {
+    fetchSolutions()
+  }, [])
+
+  const handleAddSolution = async () => {
+    if (editingSolution) {
+      if (!editingSolutionCode || !editingSolutionDescription) {
+        console.log('ERROR: Missing required fields for editing');
+        return;
+      }
+    } else {
+      if (!solutionCode || !solutionDescription) {
+        console.log('ERROR: Missing required fields for creation');
+        return;
+      }
+    }
+
+    try {
+      if(editingSolution){
+        await axiosInstance.put(`/challenge/${id}/edit-solution/${editingSolution.id}/`,{
+          code: editingSolutionCode,
+          description: editingSolutionDescription,
+          language: editingSolutionLanguage
+        })
+        setEditingSolution(null);
+        setEditingSolutionDescription('');
+        setEditingSolutionCode('');
+        setEditingSolutionLanguage('python');
+      }else{
+        await axiosInstance.post(`/challenge/${id}/add-solution/`, {
+          code: solutionCode,
+          description: solutionDescription,
+          language: solutionLanguage
+        })
+        setSolutionCode('');
+        setSolutionDescription('');
+        setSolutionLanguage('python');
+      }
+      setShowSolutionModal(false)
+
+      await fetchSolutions()
+    } catch (err) {
+      console.error('error adding/editing solution', err)
+    }
+  }
+  
 
   const formatTime = (secs) => {
     const m = String(Math.floor(secs / 60)).padStart(2, "0")
@@ -127,7 +196,7 @@ function ChallengeSolve() {
   const handleReset = () => {
     setCode(challenge.initial_code?.[language] || "")
   }
-  
+
   const handleRun = async () => {
     setIsRunning(true)
     setConsoleOutput([{ type: "info", message: "Running test cases..." }])
@@ -168,7 +237,7 @@ function ChallengeSolve() {
           time: formatTime(completionTime),
           attempts: res.data.result_summary.attempts,
           difficulty: challenge.difficulty,
-          xpEarned: res.data.result_summary.xp_awarded, 
+          xpEarned: res.data.result_summary.xp_awarded,
         })
         setTimeout(() => {
           setShowCompletionModal(true)
@@ -184,14 +253,14 @@ function ChallengeSolve() {
 
   const handleLanguageChange = (lang) => {
     setLanguage(lang)
-    if(userId && challenge){
-      const savedCode=localStorage.getItem(`challenge_code_${challenge.id}_${lang}_${userId}`)
-      if(savedCode && savedCode.trim() !==''){
+    if (userId && challenge) {
+      const savedCode = localStorage.getItem(`challenge_code_${challenge.id}_${lang}_${userId}`)
+      if (savedCode && savedCode.trim() !== '') {
         setCode(savedCode)
-      }else{
+      } else {
         setCode(challenge.initial_code?.[lang] || "")
       }
-    }else{
+    } else {
       setCode(challenge.initial_code?.[lang] || "")
     }
   }
@@ -214,7 +283,19 @@ function ChallengeSolve() {
     navigate("/home")
   }
 
-  const handleLeaderboard=()=>{
+  const handleDeleteSolution=async()=>{
+    try{
+      await axiosInstance.delete(`/challenge/${id}/delete-solution/${solutionToDelete}/`)
+      setSolutions(prev=>prev.filter((s)=>s.id !== solutionToDelete))
+      setShowDeleteModal(false)
+      setSolutionToDelete(null)
+    }catch(err){
+      console.error('error deleting solutions',err)
+    }
+
+  }
+
+  const handleLeaderboard = () => {
     setShowCompletionModal(false)
     navigate('/leaderboard')
   }
@@ -251,13 +332,12 @@ function ChallengeSolve() {
           </div>
           <div className="flex items-center space-x-4">
             <div
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg font-mono text-sm font-semibold ${
-                isTimeUp
-                  ? "bg-red-900 text-red-300"
-                  : timeLeft < 300
-                    ? "bg-yellow-900 text-yellow-300"
-                    : "bg-blue-900 text-blue-300"
-              }`}
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg font-mono text-sm font-semibold ${isTimeUp
+                ? "bg-red-900 text-red-300"
+                : timeLeft < 300
+                  ? "bg-yellow-900 text-yellow-300"
+                  : "bg-blue-900 text-blue-300"
+                }`}
             >
               <Clock className="w-4 h-4" />
               <span>{formatTime(timeLeft)}</span>
@@ -286,11 +366,10 @@ function ChallengeSolve() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-3 text-sm font-medium border-b-2 ${
-                    activeTab === tab.id
-                      ? "border-blue-500 text-blue-400 bg-gray-700"
-                      : "border-transparent text-gray-400 hover:text-gray-300"
-                  }`}
+                  className={`px-4 py-3 text-sm font-medium border-b-2 ${activeTab === tab.id
+                    ? "border-blue-500 text-blue-400 bg-gray-700"
+                    : "border-transparent text-gray-400 hover:text-gray-300"
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -346,8 +425,80 @@ function ChallengeSolve() {
               </div>
             )}
             {activeTab === "solutions" && (
-              <div className="text-center py-12">
-                <p className="text-gray-500">Solutions will be available after submission</p>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-white">Community Solutions</h3>
+                  <button
+                    onClick={() => setShowSolutionModal(true)}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2"
+                  >
+                    <span>Add Solution</span>
+                  </button>
+                </div>
+
+                {solutions.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500 text-lg mb-2">No solutions yet</p>
+                    <p className="text-gray-600 text-sm">Be the first to share your solution!</p>
+                  </div>
+                ) : (
+                  solutions.map((sol) => (
+                    <div key={sol.id} className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                      <div className="flex justify-between items-center mb-3">
+                        <div className="text-sm text-gray-400 font-medium">
+                          By {sol.username} — {new Date(sol.created_at).toLocaleDateString()}
+                        </div>
+                        <div className="text-sm font-semibold text-blue-400">
+                          {sol.user===userId && (
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => {
+                                  setEditingSolution(sol);
+                                  setEditingSolutionDescription(sol.description);
+                                  setEditingSolutionCode(sol.code);
+                                  setEditingSolutionLanguage(sol.language);
+                                  
+                                  // Clear the regular solution state variables
+                                  setSolutionCode('');
+                                  setSolutionDescription('');
+                                  setSolutionLanguage('python');
+                                  
+                                  setShowSolutionModal(true);
+                                }}
+                                className="text-blue-400 hover:underline text-sm"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSolutionToDelete(sol.id)
+                                  setShowDeleteModal(true)
+                                }}
+                                className="text-red-400 hover:underline text-sm"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <p className="text-white font-medium">{sol.description}</p>
+                      </div>
+
+                      <div className="text-xs text-gray-400 mb-3">
+                        <span>
+                          Language: <span className="text-white font-medium">{sol.language}</span>
+                        </span>
+                      </div>
+
+                      <pre className="mt-2 bg-gray-900 p-2 rounded text-sm text-gray-300 overflow-x-auto border border-gray-600">
+                        <code>{sol.code}</code>
+                      </pre>
+                    </div>
+                  ))
+                )}
               </div>
             )}
             {activeTab === "submissions" && (
@@ -357,7 +508,7 @@ function ChallengeSolve() {
                     <p className="text-gray-500 text-lg mb-2">No submissions yet</p>
                     <p className="text-gray-600 text-sm">Start coding to see your submissions here</p>
                   </div>
-                  
+
                 ) : (
                   submissions.map((s, index) => (
                     <div key={index} className="bg-gray-800 p-4 rounded-lg border border-gray-700">
@@ -366,9 +517,8 @@ function ChallengeSolve() {
                           Submitted on {new Date(s.created_at).toLocaleDateString()}
                         </div>
                         <div
-                          className={`text-sm font-semibold ${
-                            s.is_completed ? "text-green-400" : "text-red-400"
-                          }`}
+                          className={`text-sm font-semibold ${s.is_completed ? "text-green-400" : "text-red-400"
+                            }`}
                         >
                           {s.is_completed ? "Completed" : "Incomplete"}
                         </div>
@@ -453,8 +603,8 @@ function ChallengeSolve() {
               ]}
               onChange={(value) => {
                 setCode(value)
-                if(userId && challenge){
-                  localStorage.setItem(`challenge_code_${challenge.id}_${language}_${userId}`,value)
+                if (userId && challenge) {
+                  localStorage.setItem(`challenge_code_${challenge.id}_${language}_${userId}`, value)
                 }
               }}
               readOnly={!timerActive || isTimeUp}
@@ -508,15 +658,14 @@ function ChallengeSolve() {
                   {consoleOutput.map((output, idx) => (
                     <div key={idx}>
                       <div
-                        className={`${
-                          output.type === "error"
-                            ? "text-red-400"
-                            : output.type === "success"
-                              ? "text-green-400"
-                              : output.type === "warning"
-                                ? "text-yellow-400"
-                                : "text-gray-300"
-                        }`}
+                        className={`${output.type === "error"
+                          ? "text-red-400"
+                          : output.type === "success"
+                            ? "text-green-400"
+                            : output.type === "warning"
+                              ? "text-yellow-400"
+                              : "text-gray-300"
+                          }`}
                       >
                         {output.type === "error" && <XCircle className="w-4 h-4 inline mr-2" />}
                         {output.type === "success" && <CheckCircle className="w-4 h-4 inline mr-2" />}
@@ -582,13 +731,12 @@ function ChallengeSolve() {
                 <div className="text-center mb-8">
                   <div className="text-sm text-blue-200 mb-2">Difficulty</div>
                   <div
-                    className={`inline-block px-4 py-2 rounded-full text-sm font-semibold ${
-                      completionData.difficulty === "Easy"
-                        ? "bg-green-500"
-                        : completionData.difficulty === "Medium"
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
-                    }`}
+                    className={`inline-block px-4 py-2 rounded-full text-sm font-semibold ${completionData.difficulty === "Easy"
+                      ? "bg-green-500"
+                      : completionData.difficulty === "Medium"
+                        ? "bg-yellow-500"
+                        : "bg-red-500"
+                      }`}
                   >
                     {completionData.difficulty}
                   </div>
@@ -648,6 +796,126 @@ function ChallengeSolve() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ------------------- */}
+      {showSolutionModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl font-bold">
+                  {editingSolution ? 'Edit Solution' : 'Create New Solution'}
+                </h3>
+              </div>
+            </div>
+
+            {/* Form Content */}
+            <div className="p-6">
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <textarea
+                    type="text"
+                    placeholder="Enter Description"
+                    value={editingSolution? editingSolutionDescription : solutionDescription}
+                    onChange={(e) =>{
+                      if (editingSolution) {
+                        setEditingSolutionDescription(e.target.value)
+                      } else {
+                        setSolutionDescription(e.target.value)
+                      }
+                    }}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 transition-all placeholder-gray-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                  <select
+                    value={editingSolution? editingSolutionLanguage : solutionLanguage}
+                    onChange={(e) => {
+                      if (editingSolution) {
+                        setEditingSolutionLanguage(e.target.value)
+                      } else {
+                        setSolutionLanguage(e.target.value)
+                      }
+                    }}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 transition-all placeholder-gray-400 resize-none"
+                  >
+                    <option value="python">Python</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="cpp">C++</option>
+                    <option value="java">Java</option>
+                    <option value="c">C</option>
+                  </select>
+                </div>
+                <CodeMirror
+                  value={editingSolution? editingSolutionCode: solutionCode}
+                  height="200px"
+                  theme={oneDark}
+                  onChange={(value) =>{
+                    if (editingSolution) {
+                      setEditingSolutionCode(value)
+                    } else {
+                      setSolutionCode(value)
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Footer Buttons */}
+              <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowSolutionModal(false)
+                    setEditingSolution(null)
+                    setEditingSolutionDescription('')
+                    setEditingSolutionCode('')
+                    setEditingSolutionLanguage('python')
+                  }}
+                  className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={()=>{
+                    console.log('BUTTON CLICKED - Starting handleAddSolution');
+                    handleAddSolution()
+                  }}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-medium shadow-lg"
+                >
+                  {editingSolution? 'Update' : "Submit"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ------------------- */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white max-w-md w-full p-6 rounded-xl shadow-2xl">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Delete Solution</h3>
+            <p className="text-gray-600 mb-6">Are you sure you want to delete this solution? This action cannot be undone.</p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setSolutionToDelete(null)
+                }}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteSolution}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>

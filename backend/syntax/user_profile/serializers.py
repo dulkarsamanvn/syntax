@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from accounts.models import User
 from user_profile.models import Level
+from challenge.models import Submission
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -51,3 +52,11 @@ class LevelSerializer(serializers.ModelSerializer):
     class Meta:
         model=Level
         fields='__all__'
+
+
+
+class XpHistorySerializer(serializers.ModelSerializer):
+    challenge_title=serializers.CharField(source='challenge.title')
+    class Meta:
+        model=Submission
+        fields=['id','xp_awarded','challenge_title','created_at']

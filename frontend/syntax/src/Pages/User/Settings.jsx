@@ -186,8 +186,19 @@ function Settings() {
                         </div>
                       </div>
                     </div>
-
-                    <Button onClick={openModal} className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200">
+                    {current?.cancelled && (
+                      <p className="text-yellow-400 font-medium mb-4">
+                        You've cancelled your subscription. It remains active until{" "}
+                        {format(new Date(current.end_date), "dd MMM yyyy")}.
+                      </p>
+                    )}
+                    <Button
+                      onClick={openModal}
+                      disabled={current?.cancelled}
+                      className={`bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg ${
+                        current?.cancelled ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
                       {cancelling ? 'Cancelling...' : 'Cancel Membership'}
                     </Button>
                   </CardContent>

@@ -8,7 +8,7 @@ from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q
 from rest_framework import status
 from leaderboard.models import UserReport
-
+from django.core.paginator import Paginator
 # Create your views here.
 
 class LeaderboardPagination(PageNumberPagination):
@@ -88,3 +88,29 @@ class ReportStatusUpdateView(APIView):
             return Response({"success": "Status updated"})
         return Response({'error':'no status provided'},status=status.HTTP_400_BAD_REQUEST)
 
+
+class AdminLeaderboardView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def get(self,request):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'detail': 'You do not have permission to perform this action.'},status=status.HTTP_403_FORBIDDEN)
+
+        search=request.GET.get('search','')
+        page=int(request.GET.get('page',1))
+        page_size=int(request.GET.get('page_size',10))
+        top_10_users=User.objects.exclude(is_staff=True).order_by('-xp')[:10]
+        top_users=list(top_10_users)
+        if search:
+            top_users = [
+                user for user in top_users 
+                if search.lower() in user.username.lower() or search.lower() in user.email.lower()
+            ]
+        
+        paginator=Paginator(top_users,page_size)
+        page_obj=paginator.get_page(page)
+        serializer=LeaderboardSerializer(page_obj.object_list,many=True)
+        return Response({
+            'results': serializer.data,
+            'count':paginator.count
+        })
