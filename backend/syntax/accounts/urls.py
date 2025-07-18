@@ -1,5 +1,5 @@
 from django.urls import path
-from accounts.views import SignupView,VerifyOTPView,ResendOTPView,LoginView,LogoutView,RefreshTokenView,GoogleLoginView,AdminLoginView,AdminUserManagementView,AdminBlockUserView
+from accounts.views import SignupView,VerifyOTPView,ResendOTPView,LoginView,LogoutView,RefreshTokenView,GoogleLoginView,AdminLoginView,AdminUserManagementView,AdminBlockUserView,ForgetPasswordView,VerifyResetOTPView,ResetPasswordView
 
 urlpatterns = [
     path('signup/',SignupView.as_view(),name='signup'),
@@ -12,5 +12,8 @@ urlpatterns = [
     path('adminlogin/',AdminLoginView.as_view(),name='adminlogin'),
     path('user-management',AdminUserManagementView.as_view(),name='user-management'),
     path('user-management/<int:id>/block',AdminBlockUserView.as_view(),name='block-user'),
+    path('forgot-password/',ForgetPasswordView.as_view(),name='forgot-password'),
+    path('verify-reset-code/',VerifyResetOTPView.as_view(),name='verify-reset-code'),
+    path('reset-password/',ResetPasswordView.as_view(),name='reset-password'),
 
 ]

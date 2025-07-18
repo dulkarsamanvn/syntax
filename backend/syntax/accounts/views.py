@@ -378,4 +378,67 @@ class AdminBlockUserView(APIView):
         user.save()
         return Response({'message': 'User Status Updated Successfully'},status=status.HTTP_200_OK)
 
-            
+
+
+class ForgetPasswordView(APIView):
+    permission_classes=[]
+
+    def post(self,request):
+        email=request.data.get('email')
+        try:
+            user=User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'error':'User Not Found'},status=status.HTTP_404_NOT_FOUND)
+        
+        code=OTP.generate_code()
+        otp=OTP.objects.create(
+            user=user,
+            code=code,
+            expires_at=timezone.now() + timedelta(minutes=5)
+        )
+
+        send_mail(
+            subject='Your OTP Code for Reset Password ',
+            message=f'Your OTP Code is {code} ',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email]
+        )
+        return Response({'message':'OTP send to Email'},status=status.HTTP_200_OK)
+        
+
+class VerifyResetOTPView(APIView):
+    permission_classes=[]
+
+    def post(self,request):
+        print("requested data",request.data)
+        email=request.data.get('email')
+        code=request.data.get('otp')
+
+        try:
+            user=User.objects.get(email=email)
+            otp=OTP.objects.filter(user=user,code=code).last()
+
+            if not otp:
+                return Response({'error':'Invalid OTP'},status=status.HTTP_400_BAD_REQUEST)
+            if otp.is_expired:
+                return Response({'error':'OTP has expired'},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message':'OTP Verified successfully'},status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'error':'User not found'},status=status.HTTP_400_BAD_REQUEST)
+
+
+        
+class ResetPasswordView(APIView):
+    permission_classes=[]
+
+    def post(self,request):
+        email=request.data.get('email')
+        new_password=request.data.get('password')
+
+        try:
+            user=User.objects.get(email=email)
+            user.set_password(new_password)
+            user.save()
+            return Response({'message':'Password Reset Successful'},status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'error':'User not found'},status=status.HTTP_404_NOT_FOUND)

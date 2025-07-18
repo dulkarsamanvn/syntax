@@ -27,6 +27,10 @@ import PlanManagement from './Pages/Admin/PlanManagement'
 import Premium from './Pages/User/Premium'
 import ReportManagement from './Pages/Admin/ReportManagement'
 import LeaderboardManagement from './Pages/Admin/LeaderboardManagement'
+import ForgetPasswordEmail from './Pages/User/forgetPassword/forgetPasswordEmail'
+import ForgetPasswordOtp from './Pages/User/forgetPassword/ForgetPasswordOtp'
+import ResetRoute from './routes/ResetRoute'
+import ResetPassword from './Pages/User/forgetPassword/ResetPassword'
 
 function App() {
   return (
@@ -124,6 +128,18 @@ function App() {
           <AdminProtectedRoute>
             <LeaderboardManagement/>
           </AdminProtectedRoute>} />
+        
+        <Route path='/forget-password' element={ <ForgetPasswordEmail/>} />
+
+        <Route path='/verify-reset-code' element={
+          <ResetRoute>
+            <ForgetPasswordOtp/>
+          </ResetRoute>} />
+        
+        <Route path='/reset-password' element={
+          <ResetRoute>
+            <ResetPassword/>
+          </ResetRoute>} />
 
       </Routes>
     </Router>
