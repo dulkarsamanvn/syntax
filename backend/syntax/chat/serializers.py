@@ -36,7 +36,15 @@ class ChatRoomListSerializer(serializers.ModelSerializer):
         return obj.group.description if obj.is_group and obj.group else None
     
     def get_last_message(self,obj):
-        return obj.last_message.text if obj.last_message else None
+        if not obj.last_message:
+            return None
+        
+        if obj.last_message.attachment:
+            if obj.last_message.text:
+                return f"Photo: {obj.last_message.text}"
+            else:
+                return "Photo"
+        return obj.last_message.text
     
     def get_last_message_time(self,obj):
         return obj.last_message.timestamp if obj.last_message else None

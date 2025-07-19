@@ -31,7 +31,8 @@ class Message(models.Model):
     chatroom = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(User, on_delete=models.CASCADE)
     text = models.TextField(blank=True)
-    attachment = models.FileField(upload_to='chat_attachments/', blank=True, null=True)
+    # attachment = models.FileField(upload_to='chat_attachments/', blank=True, null=True)
+    attachment = models.TextField(blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read=models.BooleanField(default=False)
 
@@ -51,3 +52,13 @@ class Membership(models.Model):
 
     def __str__(self):
         return f"{self.user.username} in ChatRoom {self.chatroom.id}"
+
+
+class Reaction(models.Model):
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name='reactions')
+    user=models.ForeignKey(User, on_delete=models.CASCADE)
+    emoji = models.CharField(max_length=10)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('message', 'user', 'emoji')

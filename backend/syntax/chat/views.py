@@ -7,6 +7,7 @@ from chat.models import ChatRoom,Membership,Group
 from chat.serializers import ChatRoomListSerializer,GroupSerializer,UserSerializer
 from rest_framework import status
 from django.utils import timezone
+import cloudinary.uploader
 # Create your views here.
 
 class CreateOrGetRoomView(APIView):
@@ -235,3 +236,19 @@ class MakeAdminView(APIView):
             return Response({'error':'user is not a member'},status=status.HTTP_404_NOT_FOUND)
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class UploadAttachmentView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def post(self,request):
+        file = request.FILES.get("file")
+        if not file:
+            return Response({'error':'no file provided'},status=status.HTTP_400_BAD_REQUEST)
+        try:
+            result=cloudinary.uploader.upload(file, folder="chat_attachments/")
+            return Response({
+                'attachment_url':result['secure_url'],
+            },status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

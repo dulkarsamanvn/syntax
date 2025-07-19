@@ -13,9 +13,10 @@ function ChatRoom() {
   const [isTyping, setIsTyping] = useState(false)
   const [typing, setTyping] = useState(false)
   const [selectedMessageId, setSelectedMessageId] = useState(null)
+  const [selectedFile, setSelectedFile] = useState(null)
   const typingTimeoutRef = useRef(null)
   const roomIdRef = useRef()
-  const messagesEndRef=useRef(null)
+  const messagesEndRef = useRef(null)
   const navigate = useNavigate()
 
 
@@ -36,7 +37,7 @@ function ChatRoom() {
   useEffect(() => {
     let newSocket = null
     const connectWebSocket = async () => {
-      
+
       if (!currentUserId) {
         console.log("currentUserId not set yet, skipping WebSocket connection")
         return
@@ -72,13 +73,30 @@ function ChatRoom() {
                 }
               } else if (data.type === "delete") {
                 setMessages((prev) => prev.filter((msg) => msg.message_id !== data.message_id))
+              } else if (data.type == 'reaction') {
+                setMessages((prevMessages) =>
+                  prevMessages.map((msg) => {
+                    if (msg.message_id === data.message_id) {
+                      const currentReactions = msg.reactions || []
+                      const updatedReactions =
+                        data.action === "added"
+                          ? [...currentReactions, { user_id: data.user_id, emoji: data.emoji }]
+                          : currentReactions.filter(
+                            (r) => !(r.user_id === data.user_id && r.emoji === data.emoji)
+                          )
+
+                      return { ...msg, reactions: updatedReactions }
+                    }
+                    return msg
+                  })
+                )
               } else {
                 setMessages((prev) => [...prev, data])
 
-                if(roomIdRef.current){
+                if (roomIdRef.current) {
                   axiosInstance.post("/chat/mark-as-read/", { chatroom_id: roomIdRef.current })
-                  .then(() => console.log("Marked as read"))
-                  .catch((err)=>console.error("Mark-as-read failed", err))
+                    .then(() => console.log("Marked as read"))
+                    .catch((err) => console.error("Mark-as-read failed", err))
                 }
               }
             }
@@ -114,25 +132,34 @@ function ChatRoom() {
     }
   }, [userId, currentUserId])
 
-  
 
-  useEffect(()=>{
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  },[messages])
+  }, [messages])
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (currentUserId === null || !socket || socket.readyState !== WebSocket.OPEN) {
       console.log("currentUserId is null, cannot send.")
       setError("User not authenticated")
       return
     }
-    if (!input.trim()) {
-      console.log("Message is empty")
+    if (!input.trim() && !selectedFile) {
+      console.log("No message or file selected")
       return
     }
+
+    let attachment_url = null
+
+    if (selectedFile) {
+      attachment_url = await uploadFile()
+      if (!attachment_url) return
+    }
+
     const messageData = {
       message: input.trim(),
       sender_id: currentUserId,
+      attachment_url: attachment_url
     }
 
     console.log("Sending message via WebSocket:", messageData)
@@ -140,6 +167,7 @@ function ChatRoom() {
     try {
       socket.send(JSON.stringify(messageData))
       setInput("")
+      setSelectedFile(null)
       setError(null)
       console.log("Message sent successfully")
     } catch (err) {
@@ -194,11 +222,49 @@ function ChatRoom() {
     setSelectedMessageId(null)
   }
 
+  const handleReaction = (messageId, emoji) => {
+    if (!socket || socket.readyState !== WebSocket.OPEN) return
+
+    socket.send(
+      JSON.stringify({
+        type: "reaction",
+        message_id: messageId,
+        user_id: currentUserId,
+        emoji: emoji,
+      })
+    )
+  }
+
   const handleMessageClick = (messageId, senderId) => {
-    if (senderId === currentUserId) {
-      setSelectedMessageId(selectedMessageId === messageId ? null : messageId)
+    setSelectedMessageId(selectedMessageId === messageId ? null : messageId)
+  }
+
+  const getGroupedReactions = (reactions) => {
+    const grouped = {}
+    reactions?.forEach(({ emoji, user_id }) => {
+      if (!grouped[emoji]) grouped[emoji] = []
+      grouped[emoji].push(user_id)
+    })
+    return grouped
+  }
+
+  const uploadFile = async () => {
+    if (!selectedFile) return null
+
+    const formData = new FormData()
+    formData.append("file", selectedFile)
+
+    try {
+      const res = await axiosInstance.post('chat/upload-attachment/', formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      return res.data.attachment_url
+    } catch (err) {
+      console.error('file upload error'.err)
+      return null
     }
   }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -265,16 +331,48 @@ function ChatRoom() {
                   >
                     <div className="max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl">
                       <div
-                        className={`relative group cursor-pointer transition-all duration-200 ${
-                          msg.sender_id == currentUserId
-                            ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white ml-auto"
-                            : "bg-white/10 text-white backdrop-blur-sm"
-                        } p-3 rounded-2xl shadow-lg hover:shadow-xl ${
-                          selectedMessageId === msg.message_id ? "ring-2 ring-red-400" : ""
-                        }`}
+                        className={`relative group cursor-pointer transition-all duration-200 ${msg.sender_id == currentUserId
+                          ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white ml-auto"
+                          : "bg-white/10 text-white backdrop-blur-sm"
+                          } p-3 rounded-2xl shadow-lg hover:shadow-xl ${selectedMessageId === msg.message_id ? "ring-2 ring-red-400" : ""
+                          }`}
                         onClick={() => handleMessageClick(msg.message_id, msg.sender_id)}
                       >
                         <p className="text-sm sm:text-base break-words">{msg.message}</p>
+
+                        {msg.attachment && (
+                          <div className="mt-2">
+                            <img
+                              src={msg.attachment}
+                              alt="attachment"
+                              className="max-w-xs rounded-lg border border-white/20"
+                              onError={(e) => {
+                                console.error('Failed to load image:', e.target.src);
+                                e.target.style.display = 'none';
+                              }}
+                              onLoad={() => {
+                                console.log('Image loaded successfully:', msg.attachment);
+                              }}
+                            />
+                          </div>
+                        )}
+
+                        {msg.reactions && msg.reactions.length > 0 && (
+                          <div className="flex gap-2 mt-1 ml-2">
+                            {Object.entries(getGroupedReactions(msg.reactions)).map(([emoji, users]) => (
+                              <div
+                                key={emoji}
+                                className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm bg-white/10 text-white shadow ${users.includes(currentUserId) ? "ring-2 ring-blue-400" : ""
+                                  }`}
+                              >
+                                <span>{emoji}</span>
+                                <span>{users.length}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+
 
                         {/* Delete option - shown when message is selected */}
                         {selectedMessageId === msg.message_id && msg.sender_id === currentUserId && (
@@ -301,13 +399,34 @@ function ChatRoom() {
 
                       {msg.timestamp && (
                         <div
-                          className={`text-xs text-white/40 mt-1 px-1 ${
-                            msg.sender_id == currentUserId ? "text-right" : "text-left"
-                          }`}
+                          className={`text-xs text-white/40 mt-1 px-1 ${msg.sender_id == currentUserId ? "text-right" : "text-left"
+                            }`}
                         >
                           {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       )}
+                      {selectedMessageId === msg.message_id && msg.sender_id !== currentUserId && (
+                        <div className="flex gap-1 mt-2 ml-2">
+                          {["❤️", "😂", "👍", "🔥", "👀"].map((emoji) => {
+                            const alreadyReacted = msg.reactions?.some(
+                              (r) => r.user_id === currentUserId && r.emoji === emoji
+                            )
+
+                            return (
+                              <button
+                                key={emoji}
+                                onClick={() => handleReaction(msg.message_id, emoji)}
+                                className={`text-xl hover:scale-125 transition-transform ${alreadyReacted ? "opacity-100 scale-110 ring ring-blue-400 rounded-full" : "opacity-50"
+                                  }`}
+                                title={alreadyReacted ? "Remove reaction" : "React"}
+                              >
+                                {emoji}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
+
                     </div>
                   </div>
                 ))}
@@ -344,6 +463,10 @@ function ChatRoom() {
           <div className="flex gap-2 max-w-4xl mx-auto">
             <div className="flex-1 relative">
               <input
+                type="file"
+                onChange={(e) => setSelectedFile(e.target.files[0])}
+              />
+              <input
                 type="text"
                 value={input}
                 onChange={handleTyping}
@@ -361,7 +484,7 @@ function ChatRoom() {
             <button
               onClick={sendMessage}
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 shadow-lg"
-              disabled={!isConnected || !input.trim()}
+              disabled={!isConnected || (!input.trim() && !selectedFile)}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path

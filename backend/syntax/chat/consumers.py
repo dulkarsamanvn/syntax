@@ -2,9 +2,10 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 from asgiref.sync import sync_to_async
 import logging
-from chat.models import ChatRoom,Message
+from chat.models import ChatRoom,Message,Reaction
 from accounts.models import User
 from channels.db import database_sync_to_async
+from asgiref.sync import async_to_sync
 
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,11 @@ def get_old_messages(room_id):
             "message_id": message.id,
             "sender_id": message.sender.id,
             "timestamp": message.timestamp.isoformat(),
+            "attachment": message.attachment if message.attachment else None,
+            "reactions": [
+                {"emoji": r.emoji, "user_id": r.user.id}
+                for r in message.reactions.all()
+            ]
         }
         for message in messages
     ]
@@ -32,6 +38,10 @@ def delete_message_by_id(message_id,sender_id):
         return True
     except Message.DoesNotExist:
         return False
+
+
+
+
 
 class ChatConsumer(AsyncWebsocketConsumer):
 
@@ -77,6 +87,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
             typing=data.get('typing')
             delete_id=data.get('delete_id')
             msg_type=data.get('type')
+            attachment_url=data.get('attachment_url')
+
+            if msg_type=='reaction':
+                await self.add_or_remove_reaction(data)
+                return
             
             if msg_type=='mark_read':
                 await self.mark_messages_as_read(data)
@@ -100,10 +115,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 )
                 return
 
-            if not message:
-                logger.error("Message is missing or empty")
+            if not message and not attachment_url:
+                logger.error("Message and attachment both missing")
                 await self.send(text_data=json.dumps({
-                    'error': 'Message is required'
+                    'error': 'Message or attachment is required'
                 }))
                 return
                 
@@ -139,7 +154,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 message_obj = await sync_to_async(Message.objects.create)(
                     chatroom=room,
                     sender=sender,
-                    text=message
+                    text=message,
+                    attachment=attachment_url
                 )
                 logger.info(f"Message created: {message_obj.id}")
                 room.last_message=message_obj
@@ -183,6 +199,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "sender_id": sender_id,
                     "message_id": message_obj.id,
                     "timestamp": message_obj.timestamp.isoformat(),
+                    "attachment": str(message_obj.attachment) if message_obj.attachment else None,
                     # "timestamp": message_obj.created_at.isoformat() if hasattr(message_obj, 'created_at') else None,
                 }
             )
@@ -201,6 +218,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 "sender_id": event["sender_id"],
                 "message_id": event.get("message_id"),
                 "timestamp": event.get("timestamp"),
+                "attachment": event.get("attachment"),
             }))
         except Exception as e:
             logger.error(f"Error sending message to WebSocket: {e}")
@@ -255,6 +273,53 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'type': 'mark_read_ack',
             'marked_read': count
         }))
+    
+    async def add_or_remove_reaction(self, data):
+        message_id = data.get('message_id')
+        user_id = data.get('user_id')
+        emoji = data.get('emoji')
+
+        try:
+            message = await sync_to_async(Message.objects.get)(id=message_id)
+            user = await sync_to_async(User.objects.get)(id=user_id)
+        except Message.DoesNotExist:
+            return
+        except User.DoesNotExist:
+            return
+
+        # get_or_create safely
+        reaction_qs = Reaction.objects.filter(message=message, user=user, emoji=emoji)
+        reaction = await sync_to_async(reaction_qs.first)()
+
+        if reaction:
+            await sync_to_async(reaction.delete)()
+            action = 'removed'
+        else:
+            await sync_to_async(Reaction.objects.create)(message=message, user=user, emoji=emoji)
+            action = 'added'
+
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "reaction_event",
+                "action": action,
+                "user_id": user.id,
+                "message_id": message.id,
+                "emoji": emoji,
+            }
+        )
+
+
+    
+    async def reaction_event(self,event):
+        await self.send(text_data=json.dumps({
+            "type": "reaction",
+            "action": event["action"],
+            "user_id": event["user_id"],
+            "message_id": event["message_id"],
+            "emoji": event["emoji"],
+        }))
+
 
         
         
