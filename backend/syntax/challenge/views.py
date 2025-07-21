@@ -10,8 +10,10 @@ import json,time
 from challenge.utils import format_input_args
 from django.db.models import Count,Avg
 from django.core.paginator import Paginator
-# Create your views here.
 
+
+# Handles the creation of a new coding challenge. 
+# Only users with staff or superuser status are authorized.
 class ChallengeCreateView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -29,6 +31,8 @@ class ChallengeCreateView(APIView):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
+# Allows authorized staff or superusers to update an existing challenge.
+# Updates are partial (PATCH method).
 class ChallengeUpdateView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -47,6 +51,7 @@ class ChallengeUpdateView(APIView):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
         
 
+# ----------------------------------------------------------------
   
 # class ChallengeListView(APIView):
 #     permission_classes=[IsAuthenticated]
@@ -77,6 +82,14 @@ class ChallengeUpdateView(APIView):
 #             challenge_list.append(challenge_data)
 #         return Response(challenge_list)
 
+# ----------------------------------------------------------------
+
+
+# Lists all challenges for the authenticated user.
+# Staff and superusers see all challenges with pagination;
+# regular users see only active challenges without pagination.
+# Also includes user-specific info: whether the user has completed it,
+# how many users completed it, and the challenge's success rate.
 class ChallengeListView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -125,7 +138,8 @@ class ChallengeListView(APIView):
         
 
 
-
+# Allows staff/superusers to activate or deactivate a challenge
+# using the `is_active` field.
 class ChallengeBlockView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -148,6 +162,8 @@ class ChallengeBlockView(APIView):
         return Response({'message':'Challenge Status Updated Successfully'},status=status.HTTP_200_OK)
 
 
+# Fetches detailed information about a specific challenge by ID.
+# Non-admin users can only view active challenges.
 class ChallengeDetailView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -164,6 +180,11 @@ class ChallengeDetailView(APIView):
 
 PISTON_URL = "https://emkc.org/api/v2/piston/execute"
 
+
+
+# Executes the user's code against all **visible** test cases
+# using the Piston code execution API.
+# Returns the result of each test case with a summary of passed tests.
 class RunChallengeView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -292,6 +313,11 @@ int main() {{
         })
 
 
+
+# Handles challenge submission by the user.
+# Code is executed against **all** test cases (visible + hidden).
+# Awards XP only if the user is completing the challenge for the first time.
+# Saves the submission and updates the user's XP and progress.
 class SubmitChallengeView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -485,7 +511,8 @@ class SubmitChallengeView(APIView):
             },status=status.HTTP_200_OK)
 
 
-
+# Retrieves all past submissions of the authenticated user 
+# for a specific challenge by ID.
 class SubmissionListView(APIView):
     permission_classes =[IsAuthenticated]
 
@@ -496,6 +523,8 @@ class SubmissionListView(APIView):
         return Response(serializer.data,status=status.HTTP_200_OK)
     
 
+# Allows an authenticated user to submit a solution (explanation) 
+# for a challenge they've completed.
 class CreateSolutionView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -508,6 +537,10 @@ class CreateSolutionView(APIView):
             return Response(serializer.data,status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
+
+
+# Retrieves all submitted solutions (explanations) 
+# for a specific challenge.
 class SolutionListView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -516,6 +549,9 @@ class SolutionListView(APIView):
         serializer=SolutionSerializer(solutions,many=True)
         return Response(serializer.data)
 
+
+# Allows a user to delete their own solution 
+# to a specific challenge.
 class SolutionDeleteView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -528,6 +564,8 @@ class SolutionDeleteView(APIView):
         return Response({'detail': 'Solution deleted'}, status=status.HTTP_204_NO_CONTENT)
 
 
+# Allows a user to edit/update their own submitted solution 
+# for a specific challenge. Partial updates are allowed.
 class SolutionEditView(APIView):
     permission_classes=[IsAuthenticated]
 

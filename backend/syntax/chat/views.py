@@ -8,8 +8,11 @@ from chat.serializers import ChatRoomListSerializer,GroupSerializer,UserSerializ
 from rest_framework import status
 from django.utils import timezone
 import cloudinary.uploader
-# Create your views here.
 
+
+# View to create or retrieve a 1-on-1 chat room between the authenticated user and a target user.
+# If such a room already exists (non-group with both users as participants), it returns the existing room ID.
+# Otherwise, it creates a new chat room and adds both users as members.
 class CreateOrGetRoomView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -34,6 +37,8 @@ class CreateOrGetRoomView(APIView):
         return Response({"room_id": new_room.id})
 
 
+# View to list all chat rooms (group and personal) the authenticated user is a part of.
+# Returns serialized room details including participants.
 class ChatRoomsListView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -43,6 +48,10 @@ class ChatRoomsListView(APIView):
         serializer=ChatRoomListSerializer(rooms,many=True,context={'request':request})
         return Response(serializer.data)
 
+
+# View to create a new group chat room.
+# Accepts group metadata and a list of user IDs to add as initial members.
+# Validates member limit and group name before creation.
 class CreateGroupView(APIView):
 
     permission_classes=[IsAuthenticated]
@@ -88,6 +97,8 @@ class CreateGroupView(APIView):
         },status=status.HTTP_201_CREATED)
 
 
+# View to retrieve group details for a given chatroom.
+# Returns serialized group info and a list of group members including their admin status.
 class GroupDetailsView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -111,7 +122,9 @@ class GroupDetailsView(APIView):
             return Response({'error':'Chatroom Not Found'},status=status.HTTP_404_NOT_FOUND)
 
 
-
+# View to remove a user from a group chatroom.
+# Only users with admin privileges can remove members.
+# Prevents removing the group creator.
 class RemoveGroupMemberView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -133,7 +146,8 @@ class RemoveGroupMemberView(APIView):
             return Response({'error':'Chatroom not found'},status=status.HTTP_404_NOT_FOUND)
 
 
-
+# View to list previous 1-on-1 chat users who are not already members of a given group chatroom.
+# Helps in suggesting users who can be added to the group.
 class PreviousChatUsers(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -157,6 +171,9 @@ class PreviousChatUsers(APIView):
         return Response(serialized.data)
                     
 
+# View to add a user to an existing group chatroom.
+# Only admins can add members.
+# Validates member limit and prevents duplicate additions.
 class AddGroupMemberView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -198,6 +215,8 @@ class AddGroupMemberView(APIView):
             return Response({'error': 'You are not a member of this group'}, status=status.HTTP_403_FORBIDDEN)
 
 
+# View to mark all unread messages in a chatroom as read for the authenticated user.
+# Ignores messages sent by the user themselves.
 class MarkUnreadMessagesView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -213,6 +232,9 @@ class MarkUnreadMessagesView(APIView):
         return Response({'marked_read':count})
 
 
+# View to promote a group member to admin role.
+# Only current admins can promote other members.
+# Returns updated user data including their new admin status.
 class MakeAdminView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -237,7 +259,9 @@ class MakeAdminView(APIView):
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
-
+# View to upload an attachment (image) to Cloudinary.
+# Returns a secure URL of the uploaded file.
+# Used for sending media in chat messages.
 class UploadAttachmentView(APIView):
     permission_classes=[IsAuthenticated]
 

@@ -8,8 +8,10 @@ from rest_framework import status
 from user_profile.models import Level
 from challenge.models import Submission
 
-# Create your views here.
 
+# View to retrieve and update the authenticated user's profile.
+# GET: Returns the user's profile data and triggers a level-up check.
+# PATCH: Allows partial update of user profile fields including file uploads (profile picture).
 class UserProfileView(APIView):
     permission_classes=[IsAuthenticated]
     parser_classes=[MultiPartParser,FormParser]
@@ -27,7 +29,9 @@ class UserProfileView(APIView):
         return Response(serializer.errors,status=400)
 
 
-
+# View to create a new level entry in the system.
+# Only accepts requests from authenticated users.
+# Used by admins to define XP thresholds and level metadata.
 class LevelCreateView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -40,6 +44,8 @@ class LevelCreateView(APIView):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
+# View to list all levels ordered by their number.
+# Useful for displaying level progressions in a leaderboard or user profile.
 class LevelListView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -48,6 +54,10 @@ class LevelListView(APIView):
         serializer=LevelSerializer(levels,many=True)
         return Response(serializer.data)
 
+
+# View to update an existing level entry by its ID.
+# Ensures the level exists before attempting an update.
+# Used in admin-level configurations.
 class LevelUpdateView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -64,7 +74,9 @@ class LevelUpdateView(APIView):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
-
+# View to retrieve the XP history of the authenticated user.
+# Fetches all submissions that awarded XP, ordered by the most recent.
+# Helpful for users to track their XP gains over time.
 class XpHistoryView(APIView):
     permission_classes=[IsAuthenticated]
 

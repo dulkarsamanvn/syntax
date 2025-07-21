@@ -9,8 +9,11 @@ from django.db.models import Q
 from rest_framework import status
 from leaderboard.models import UserReport
 from django.core.paginator import Paginator
-# Create your views here.
 
+
+# Custom pagination class for the leaderboard.
+# Sets default page size to 10 users per page but allows customization via query params.
+# Ensures the response is paginated and avoids overloading large result sets.
 class LeaderboardPagination(PageNumberPagination):
     page_size=10
     page_size_query_param='page_size'
@@ -18,7 +21,11 @@ class LeaderboardPagination(PageNumberPagination):
 
 
 
-
+# View to retrieve and paginate the global leaderboard.
+# - Excludes admin users.
+# - Supports search functionality by username.
+# - Returns both paginated users and the top 3 globally (for displaying highlights).
+# - Also includes the current user's ID for front-end handling (highlighting).
 class LeaderBoardView(APIView):
     permission_classes=[IsAuthenticated]
     def get(self,request):
@@ -39,7 +46,9 @@ class LeaderBoardView(APIView):
         return paginated_response
 
 
-
+# View for reporting a user (e.g., for abuse, inappropriate content, etc.)
+# Accepts the reported user's ID, a reason, and an optional description.
+# Saves the report in the database for admin review.
 class CreateReportUserView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -61,8 +70,11 @@ class CreateReportUserView(APIView):
         )
 
         return Response({'message':'Report Submitted Successfully'},status=status.HTTP_201_CREATED)
-        
 
+
+# Admin-only view that retrieves all user reports submitted in the system.
+# Sorted by most recent (descending order of creation).
+# Used for moderation tools to view reported accounts and reasons.
 class UserReportListView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -72,6 +84,10 @@ class UserReportListView(APIView):
         return Response(serializer.data)
 
 
+
+# View to update the status of a user report.
+# Common use cases: mark as 'Resolved', 'Pending', 'In Review', etc.
+# Accepts a report ID and the new status.
 class ReportStatusUpdateView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -89,6 +105,10 @@ class ReportStatusUpdateView(APIView):
         return Response({'error':'no status provided'},status=status.HTTP_400_BAD_REQUEST)
 
 
+# Admin-only leaderboard view that returns the top 10 users based on XP.
+# Supports search by username or email within the top users.
+# Uses Django’s built-in Paginator for page-wise response.
+# Used in admin dashboards
 class AdminLeaderboardView(APIView):
     permission_classes=[IsAuthenticated]
 

@@ -21,7 +21,9 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
 
-
+# Handles new user registration via email
+# Validates user input using SignupSerializer
+# Generates and sends an OTP to the user's email for verification
 @method_decorator(csrf_exempt, name='dispatch')
 class SignupView(APIView):
     permission_classes=[]
@@ -48,6 +50,10 @@ class SignupView(APIView):
         print(serializer.errors)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
+
+# Verifies the OTP sent to user's email
+# If OTP is valid and not expired, marks the user as verified
+# Generates and sends JWT access and refresh tokens as cookies to log the user in
 @method_decorator(csrf_exempt, name='dispatch')
 class VerifyOTPView(APIView):
     permission_classes=[]
@@ -91,6 +97,11 @@ class VerifyOTPView(APIView):
         except User.DoesNotExist:
             return Response({'error':'User not found'},status=status.HTTP_400_BAD_REQUEST)
 
+
+
+# Allows resending of OTP to user's email if requested
+# Prevents abuse by enforcing a 60-second cooldown between OTP sends
+# Generates a new OTP and emails it to the user
 @method_decorator(csrf_exempt, name='dispatch')
 class ResendOTPView(APIView):
     permission_classes=[]
@@ -124,8 +135,10 @@ class ResendOTPView(APIView):
         except User.DoesNotExist:
             return Response({'error':'User not found'},status=status.HTTP_400_BAD_REQUEST)
 
-
-                
+              
+# Handles user login using email and password
+# Sends a new OTP if the email is not verified
+# On successful login, sends JWT tokens (access and refresh) in cookies              
 @method_decorator(csrf_exempt, name='dispatch')                    
 class LoginView(APIView):
     permission_classes=[]
@@ -187,6 +200,9 @@ class LoginView(APIView):
 
 # -------------------------------------
 
+# Logs out the user by clearing JWT access and refresh tokens from cookies
+# Stateless logout (no server-side session tracking needed)
+# Simple endpoint accessible without authentication
 @method_decorator(csrf_exempt, name='dispatch')
 class LogoutView(APIView):
     permission_classes=[]
@@ -197,6 +213,10 @@ class LogoutView(APIView):
         return response
     
 
+
+# Generates a new access token using a valid refresh token from cookie
+# Helps in keeping the user logged in without requiring re-login
+# Returns a new short-lived access token in the cookie
 @method_decorator(csrf_exempt, name='dispatch')
 class RefreshTokenView(APIView):
     permission_classes=[]
@@ -221,6 +241,10 @@ class RefreshTokenView(APIView):
             return Response({'detail':'Invalid refresh token'},status=status.HTTP_403_FORBIDDEN)
 
 
+
+# Handles login using Google OAuth2
+# Verifies Google-issued token and creates or fetches a local user
+# Issues JWT tokens and returns them in cookies upon successful login
 @method_decorator(csrf_exempt, name='dispatch')
 class GoogleLoginView(APIView):
     permission_classes=[]
@@ -271,6 +295,10 @@ class GoogleLoginView(APIView):
             return Response({'error': 'Invalid token', 'details': str(e)},status=status.HTTP_400_BAD_REQUEST)
 
 
+
+# Authenticates admin user (is_staff required)
+# Issues JWT access and refresh tokens on successful login
+# Ensures that only admin users can access admin functionalities
 @method_decorator(csrf_exempt, name='dispatch')
 class AdminLoginView(APIView):
     permission_classes=[]
@@ -316,7 +344,9 @@ class AdminLoginView(APIView):
         return response
 
 
-
+# Allows admin to view and filter all registered (non-staff) users
+# Supports search by email/username and filter by active/blocked status
+# Returns paginated user results using AdminUserSerializer
 class AdminUserManagementView(APIView):
     permission_classes=[IsAuthenticated]
     def get(self, request):
@@ -357,6 +387,10 @@ class AdminUserManagementView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+
+# Allows admin to block or unblock a specific user by ID
+# Ensures that only staff/superuser can perform this action
+# Updates the is_active status of the selected user
 class AdminBlockUserView(APIView):
     permission_classes=[IsAuthenticated]
     def patch(self,request,id):
@@ -379,7 +413,9 @@ class AdminBlockUserView(APIView):
         return Response({'message': 'User Status Updated Successfully'},status=status.HTTP_200_OK)
 
 
-
+# Initiates password reset process by sending OTP to user's email
+# Verifies if the email exists in the system before sending OTP
+# OTP will be used in the next step to validate reset intent
 class ForgetPasswordView(APIView):
     permission_classes=[]
 
@@ -406,6 +442,9 @@ class ForgetPasswordView(APIView):
         return Response({'message':'OTP send to Email'},status=status.HTTP_200_OK)
         
 
+# Verifies OTP sent during password reset process
+# Confirms that the OTP is valid and not expired
+# Used as a prerequisite step before allowing password change
 class VerifyResetOTPView(APIView):
     permission_classes=[]
 
@@ -427,7 +466,9 @@ class VerifyResetOTPView(APIView):
             return Response({'error':'User not found'},status=status.HTTP_400_BAD_REQUEST)
 
 
-        
+# Completes password reset process by setting a new password
+# Only works after OTP has been verified in previous step
+# Updates the user's password securely using set_password()
 class ResetPasswordView(APIView):
     permission_classes=[]
 

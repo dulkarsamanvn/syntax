@@ -9,8 +9,10 @@ from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
 import razorpay
-# Create your views here.
 
+
+# View to create a new premium subscription plan.
+# Accessible only by authenticated users (admins).
 class PremiumPlanCreateView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -21,6 +23,9 @@ class PremiumPlanCreateView(APIView):
             return Response(serializer.data,status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
+
+# View to update an existing premium plan by its ID.
+# Useful for editing plan name, price, duration, etc.
 class PremiumPlanUpdateView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -38,7 +43,8 @@ class PremiumPlanUpdateView(APIView):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
         
 
-
+# View to list all premium plans.
+# Admins see all plans, while regular users only see active ones.
 class PremiumPlanListVIew(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -52,6 +58,8 @@ class PremiumPlanListVIew(APIView):
         return Response(serializer.data)
 
 
+# View to create a Razorpay order for a selected premium plan.
+# Returns the Razorpay order details needed for client-side payment processing.
 class PremiumPlanOrderView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -80,6 +88,10 @@ class PremiumPlanOrderView(APIView):
             }
         })
 
+
+# View to verify Razorpay payment signature after client-side payment.
+# If verified, activates the plan and updates/substitutes user's subscription.
+# Also stores previous subscription in history if not expired.
 class VerifyPaymentView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -133,6 +145,8 @@ class VerifyPaymentView(APIView):
         return Response({'message': 'Subscription activated successfully'})
             
 
+# View to check the user's current subscription status.
+# Returns plan details and expiry info if the user is subscribed and not expired.
 class CheckSubscriptionView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -151,6 +165,8 @@ class CheckSubscriptionView(APIView):
         return Response({'is_premium':False})
 
 
+# View to cancel an active subscription.
+# Marks the subscription as cancelled but retains access until the end date.
 class CancelSubscriptionView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -164,6 +180,8 @@ class CancelSubscriptionView(APIView):
         return Response({'error':'no active subscription'},status=status.HTTP_400_BAD_REQUEST)
 
 
+# View to retrieve a list of the user's past subscriptions.
+# Includes plan name, duration, and price paid.
 class MembershipHistoryView(APIView):
     permission_classes=[IsAuthenticated]
 
