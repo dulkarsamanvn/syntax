@@ -74,7 +74,7 @@ function Settings() {
           <Button
             variant="ghost"
             className="flex items-center gap-2 text-white hover:bg-slate-800/50 px-3 py-2 h-auto"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/profile')}
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="text-sm font-medium">BACK</span>
@@ -95,14 +95,16 @@ function Settings() {
                 </CardHeader>
                 <CardContent className="p-0">
                   <nav className="space-y-1 p-4">
-                    <div className="flex items-center justify-between p-3 hover:bg-slate-700/50 rounded-lg cursor-pointer transition-all duration-200 group">
+                    <div
+                      onClick={() => navigate("/settings/security")}
+                      className="flex items-center justify-between p-3 hover:bg-slate-700/50 rounded-lg cursor-pointer transition-all duration-200 group"
+                    >
                       <div className="flex items-center gap-3">
                         <Shield className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
                         <span className="text-slate-300 group-hover:text-white transition-colors">Security</span>
                       </div>
                       <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
                     </div>
-
                     <div className="flex items-center justify-between p-3 hover:bg-slate-700/50 rounded-lg cursor-pointer transition-all duration-200 group">
                       <div className="flex items-center gap-3">
                         <Bell className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />

@@ -8,6 +8,7 @@ from chat.serializers import ChatRoomListSerializer,GroupSerializer,UserSerializ
 from rest_framework import status
 from django.utils import timezone
 import cloudinary.uploader
+from django.core.paginator import Paginator
 
 
 # View to create or retrieve a 1-on-1 chat room between the authenticated user and a target user.
@@ -44,7 +45,7 @@ class ChatRoomsListView(APIView):
 
     def get(self,request):
         user=request.user
-        rooms=ChatRoom.objects.filter(participants=user).prefetch_related('participants')
+        rooms=ChatRoom.objects.filter(participants=user,is_active=True).prefetch_related('participants')
         serializer=ChatRoomListSerializer(rooms,many=True,context={'request':request})
         return Response(serializer.data)
 
@@ -225,7 +226,7 @@ class MarkUnreadMessagesView(APIView):
         user=request.user
 
         try:
-            chatroom=ChatRoom.objects.get(id=chatroom_id,participants=user)
+            chatroom=ChatRoom.objects.get(id=chatroom_id,participants=user,is_active=True)
         except ChatRoom.DoesNotExist:
             return Response({'error':'chatroom not found'},status=status.HTTP_404_NOT_FOUND)
         count=chatroom.messages.filter(is_read=False).exclude(sender=user).update(is_read=True)
@@ -276,3 +277,97 @@ class UploadAttachmentView(APIView):
             },status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+#view to list all the groups on admin side
+#given pagination for the better usage
+class GroupListView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def get(self,request):
+        search=request.GET.get('search','')
+        page=int(request.GET.get('page',1))
+        page_size=int(request.GET.get('page_size',10))
+        groups=Group.objects.all().order_by('-created_at')
+        if search:
+            groups = [
+                group for group in groups 
+                if search.lower() in group.name.lower() 
+            ]
+        paginator=Paginator(groups,page_size)
+        page_obj=paginator.get_page(page)
+        serializer=GroupSerializer(page_obj.object_list,many=True)
+        return Response({
+            'results':serializer.data,
+            'count':paginator.count
+        })
+
+
+
+
+# Allows staff/superusers to block or unblock a group
+# using the `is_active` field.
+class GroupBlockView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def patch(self,request,group_id):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'detail': 'You do not have permission to perform this action.'},status=status.HTTP_403_FORBIDDEN)
+        try:
+            group=Group.objects.get(id=group_id)
+        except Group.DoesNotExist:
+            return Response({'error':'Group not Found'},status=status.HTTP_404_NOT_FOUND)
+        is_active=request.data.get('is_active')
+        if is_active is None:
+            return Response({'error':'is_active field is required'},status=status.HTTP_400_BAD_REQUEST)
+        group.is_active=is_active
+        group.save()
+        return Response({'message':'Challenge Status Updated Successfully'},status=status.HTTP_200_OK)
+
+
+
+# view to list all the groups on user side
+# retrieves the group that are joined and not joined by the user
+class UserGroupListView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def get(self,request):
+        user=request.user
+
+        joined_groups=Group.objects.filter(chatroom__memberships__user=user,is_active=True,is_private=False).distinct()
+        not_joined_groups=Group.objects.exclude(chatroom__memberships__user=user).filter(is_active=True,is_private=False).distinct()
+
+        joined_serializer=GroupSerializer(joined_groups,many=True)
+        not_joined_serializer=GroupSerializer(not_joined_groups,many=True)
+
+        return Response({
+            'joined_groups':joined_serializer.data,
+            'not_joined_groups':not_joined_serializer.data
+        })
+
+
+#view to join the groups that are public
+#checks if its private, member limit before joining the group
+class JoinGroupView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def post(self,request,group_id):
+        user=request.user
+        group=Group.objects.get(id=group_id)
+
+        if group.is_private:
+            return Response({'detail':'This is a Private Group'},status=status.HTTP_403_FORBIDDEN)
+        if not hasattr(group,'chatroom'):
+            return Response({'detail':'chatroom not found for this group'},status=status.HTTP_400_BAD_REQUEST)
+        
+        chatroom=group.chatroom
+
+        if Membership.objects.filter(user=user,chatroom=chatroom).exists():
+            return Response({'detail':'You are already a member of this group'},status=status.HTTP_200_OK)
+        if chatroom.memberships.count() >=group.member_limit:
+            return Response({'detail':'Group member limit reached.'},status=status.HTTP_403_FORBIDDEN)
+        Membership.objects.create(user=user,chatroom=chatroom)
+        return Response({'detail':'Successfully joined the group'},status=status.HTTP_201_CREATED)
+        
+        
+

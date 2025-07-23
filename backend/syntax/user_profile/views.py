@@ -2,11 +2,12 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from user_profile.serializers import UserProfileSerializer,LevelSerializer,XpHistorySerializer
+from user_profile.serializers import UserProfileSerializer,LevelSerializer,XpHistorySerializer,ChangePasswordSerializer
 from rest_framework.parsers import MultiPartParser,FormParser
 from rest_framework import status
-from user_profile.models import Level
+from user_profile.models import Level,DailyXPClaim
 from challenge.models import Submission
+from datetime import date
 
 
 # View to retrieve and update the authenticated user's profile.
@@ -84,3 +85,60 @@ class XpHistoryView(APIView):
         submissions=Submission.objects.filter(user=request.user,xp_awarded__gt=0).order_by('-created_at')
         serializer=XpHistorySerializer(submissions,many=True)
         return Response(serializer.data)
+
+
+# view to update the password
+# validated the current password before updating the password
+class ChangePasswordView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def post(self,request):
+        serializer=ChangePasswordSerializer(data=request.data,context={'request': request})
+        if serializer.is_valid():
+            user=request.user
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+            return Response({'detail':'Password Changed Successfully'},status=status.HTTP_200_OK)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+    
+
+XP_DAY_REWARDS = {
+    1: 10,
+    2: 10,
+    3: 10,
+    4: 10,
+    5: 10,
+    6: 10,
+    7: 15, 
+}
+
+class GiftStatusView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def get(self,request):
+        today=date.today()
+        claimed_today=DailyXPClaim.objects.filter(user=request.user,claimed_at=today).exists()
+        total_claims=DailyXPClaim.objects.filter(user=request.user).count()
+        current_day=(total_claims % 7) + 1
+        xp=XP_DAY_REWARDS.get(current_day,10)
+        return Response({
+            "claimed_today": claimed_today,
+            "day": current_day,
+            'xp':xp
+        })
+
+class ClaimXpView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def post(self,request):
+        today=date.today()
+        if DailyXPClaim.objects.filter(user=request.user,claimed_at=today).exists():
+            return Response({'error':'Already claimed today'},status=status.HTTP_400_BAD_REQUEST)
+        total_claims=DailyXPClaim.objects.filter(user=request.user).count()
+        current_day=(total_claims % 7) +1
+        xp=XP_DAY_REWARDS.get(current_day,10)
+
+        DailyXPClaim.objects.create(user=request.user,day=current_day)
+        request.user.xp+=xp
+        request.user.save()
+        return Response({"message": f"{xp} XP claimed for Day {current_day}!", "xp": xp},status=status.HTTP_201_CREATED)

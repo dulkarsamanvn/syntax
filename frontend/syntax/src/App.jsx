@@ -1,5 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
 import Signup from './Pages/User/Signup'
 import OtpVerification from './Pages/User/OtpVerification'
 import Login from './Pages/User/Login'
@@ -31,10 +32,29 @@ import ForgetPasswordEmail from './Pages/User/forgetPassword/forgetPasswordEmail
 import ForgetPasswordOtp from './Pages/User/forgetPassword/ForgetPasswordOtp'
 import ResetRoute from './routes/ResetRoute'
 import ResetPassword from './Pages/User/forgetPassword/ResetPassword'
+import SettingsSecurity from './Pages/User/SettingsSecurity'
+import GroupManagement from './Pages/Admin/GroupManagement'
 
 function App() {
   return (
     <Router>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          success: {
+            style: {
+              background: 'linear-gradient(to right, #2563eb, #7c3aed)', 
+              color: 'white',
+            },
+          },
+          error: {
+            style: {
+              background: 'linear-gradient(to right, #dc2626, #db2777)', 
+              color: 'white',
+            },
+          },
+        }}
+      />
       <Routes>
         <Route path='/signup'
           element={<PublicRoute>
@@ -52,94 +72,104 @@ function App() {
           element={<ProtectedRoute>
             <Home />
           </ProtectedRoute>} />
-        
+
         <Route path='/adminlogin' element={
           <AdminPublicRoute>
-            <AdminLogin/>
+            <AdminLogin />
           </AdminPublicRoute>} />
 
         <Route path='/admin/dashboard' element={
           <AdminProtectedRoute>
-            <AdminDashboard/>
+            <AdminDashboard />
           </AdminProtectedRoute>} />
 
         <Route path='/admin/user-management' element={
           <AdminProtectedRoute>
-            <UserManagement/>
+            <UserManagement />
           </AdminProtectedRoute>} />
 
         <Route path='/profile' element={
           <ProtectedRoute>
-            <UserProfile/>
+            <UserProfile />
           </ProtectedRoute>} />
-        
+
         <Route path='/settings' element={
           <ProtectedRoute>
-            <Settings/>
+            <Settings />
           </ProtectedRoute>} />
-        
+
         <Route path='/edit-profile' element={
           <ProtectedRoute>
-            <EditProfile/>
+            <EditProfile />
           </ProtectedRoute>} />
 
         <Route path='/admin/challenge-management' element={
           <AdminProtectedRoute>
-            <ChallengeList/>
+            <ChallengeList />
           </AdminProtectedRoute>} />
 
         <Route path='/challenge/:id' element={
           <ProtectedRoute>
-            <ChallengeSolve/>
+            <ChallengeSolve />
           </ProtectedRoute>} />
-        
+
         <Route path='/admin/level-management' element={
           <AdminProtectedRoute>
-            <LevelList/>
+            <LevelList />
           </AdminProtectedRoute>} />
-        
+
         <Route path='/leaderboard' element={
           <ProtectedRoute>
-            <LeaderBoard/>
+            <LeaderBoard />
           </ProtectedRoute>} />
-        
+
         <Route path="/chat" element={<ProtectedRoute><ChatLayout /></ProtectedRoute>}>
-          <Route index element={<ChatHome/>} />
+          <Route index element={<ChatHome />} />
           <Route path=":userId" element={<ChatRoom />} />
           <Route path="group/:id" element={<GroupChatRoom />} />
         </Route>
 
         <Route path='/admin/plan-management' element={
           <AdminProtectedRoute>
-            <PlanManagement/>
+            <PlanManagement />
           </AdminProtectedRoute>} />
-          
+
         <Route path='/premium' element={
           <ProtectedRoute>
-            <Premium/>
+            <Premium />
           </ProtectedRoute>} />
-        
+
         <Route path='/admin/report-management' element={
           <AdminProtectedRoute>
-            <ReportManagement/>
+            <ReportManagement />
           </AdminProtectedRoute>} />
-        
+
         <Route path='/admin/leaderboard' element={
           <AdminProtectedRoute>
-            <LeaderboardManagement/>
+            <LeaderboardManagement />
           </AdminProtectedRoute>} />
-        
-        <Route path='/forget-password' element={ <ForgetPasswordEmail/>} />
+
+        <Route path='/forget-password' element={<ForgetPasswordEmail />} />
 
         <Route path='/verify-reset-code' element={
           <ResetRoute>
-            <ForgetPasswordOtp/>
+            <ForgetPasswordOtp />
           </ResetRoute>} />
-        
+
         <Route path='/reset-password' element={
           <ResetRoute>
-            <ResetPassword/>
+            <ResetPassword />
           </ResetRoute>} />
+
+        <Route path='/settings/security' element={
+          <ProtectedRoute>
+            <SettingsSecurity />
+          </ProtectedRoute>} />
+        
+        <Route path='/admin/group-management' element={
+          <AdminProtectedRoute>
+            <GroupManagement />
+          </AdminProtectedRoute>} />
 
       </Routes>
     </Router>

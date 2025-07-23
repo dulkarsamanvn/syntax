@@ -46,7 +46,7 @@ function UserProfile() {
   }
 
   const handleSettings = () => {
-    navigate('/settings')
+    navigate('/settings/security')
   }
 
   useEffect(() => {

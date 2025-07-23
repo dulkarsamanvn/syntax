@@ -449,7 +449,6 @@ class VerifyResetOTPView(APIView):
     permission_classes=[]
 
     def post(self,request):
-        print("requested data",request.data)
         email=request.data.get('email')
         code=request.data.get('otp')
 

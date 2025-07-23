@@ -26,6 +26,24 @@ function CreateLevelModal({ isOpen, onClose, onSuccess,isEdit,initialData }) {
     setLoading(true)
     setMessage("")
 
+    if (!number || !xp) {
+      setMessage("All fields are required.")
+      return
+    }
+
+    const levelNumber = parseInt(number)
+    const xpValue = parseInt(xp)
+
+    if (isNaN(levelNumber) || levelNumber < 1) {
+      setMessage("Level number must be a positive integer.")
+      return
+    }
+
+    if (isNaN(xpValue) || xpValue < 0) {
+      setMessage("XP threshold must be 0 or more.")
+      return
+    }
+
     try {
       if(isEdit && initialData){
         await axiosInstance.put(`/profile/${initialData.id}/update-level/`,{

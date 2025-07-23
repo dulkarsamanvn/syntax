@@ -1,4 +1,6 @@
 import axiosInstance from "@/api/axiosInstance"
+import GiftReceivedModal from "@/Components/GiftReceivedModal"
+import GroupCard from "@/Components/GroupCard"
 import {
   Search,
   Bell,
@@ -27,25 +29,30 @@ export default function Home() {
     rank: 1,
   })
   const [challenges, setChallenges] = useState([])
-  const [isPremium,setIsPremium]=useState(false)
+  const [isPremium, setIsPremium] = useState(false)
+  const [notJoinedGroups, setNotJoinedGroups] = useState([])
+  const [joinedGroups, setJoinedGroups] = useState([])
+  const [showGiftModal, setShowGiftModal] = useState(false)
+  const [giftDay, setGiftDay] = useState(null)
+  const [xpAmount, setXpAmount] = useState(0)
   const navigate = useNavigate()
 
   const handleProfile = () => {
     navigate("/profile")
   }
 
-  useEffect(()=>{
-    const fetchSubscription=async()=>{
-      try{
-        const res=await axiosInstance.get('/premium/check-subscription/')
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const res = await axiosInstance.get('/premium/check-subscription/')
         setIsPremium(res.data.is_premium)
-      }catch(err){
-        console.error('error fetching subscription',err)
+      } catch (err) {
+        console.error('error fetching subscription', err)
       }
     }
 
     fetchSubscription()
-  },[])
+  }, [])
 
   useEffect(() => {
     const fetch_profile = async () => {
@@ -64,6 +71,18 @@ export default function Home() {
       }
     }
 
+
+    const fetchGroups = async () => {
+      try {
+        const res = await axiosInstance.get('/chat/groups-list/user/')
+        setNotJoinedGroups(res.data.not_joined_groups)
+        setJoinedGroups(res.data.joined_groups)
+      } catch (err) {
+        console.error('error fetching the groups', err)
+      }
+    }
+
+
     const fetchChallenges = async () => {
       try {
         const res = await axiosInstance.get("/challenge/list/")
@@ -75,7 +94,37 @@ export default function Home() {
 
     fetch_profile()
     fetchChallenges()
+    fetchGroups()
   }, [])
+
+  useEffect(() => {
+    const checkGiftStatus = async () => {
+      try {
+        const res = await axiosInstance.get('/profile/gift-status/')
+        if (!res.data.claimed_today) {
+          setXpAmount(res.data.xp)
+          setGiftDay(res.data.day)
+          setShowGiftModal(true)
+        }
+      } catch (err) {
+        console.error('failed to check daily xp status', err)
+      }
+    }
+    checkGiftStatus()
+  }, [])
+
+  const handleUseGift=async()=>{
+    try{
+      await axiosInstance.post('/profile/claim-reward/')
+      setUserProfile((prev) => ({ ...prev, xp: prev.xp + xpAmount }))
+      setTimeout(() => {
+        setShowGiftModal(false)
+      }, 2000);
+
+    }catch(err){
+      console.error('Failed to claim xp reward',err)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
@@ -109,10 +158,10 @@ export default function Home() {
             <button className="md:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200">
               <Search className="w-5 h-5" />
             </button>
-            <button onClick={()=>navigate('/leaderboard')} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200" title="leaderboard">
+            <button onClick={() => navigate('/leaderboard')} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200" title="leaderboard">
               <Award className="w-5 h-5" />
             </button>
-            <button onClick={()=>navigate('/chat')} className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200" title="chat">
+            <button onClick={() => navigate('/chat')} className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200" title="chat">
               <MessageSquare className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-xs rounded-full w-4 h-4 flex items-center justify-center shadow-lg animate-pulse">
                 2
@@ -317,9 +366,9 @@ export default function Home() {
 
                       <button
                         onClick={() => {
-                          if(challenge.is_premium && !isPremium){
+                          if (challenge.is_premium && !isPremium) {
                             navigate('/premium')
-                          }else{
+                          } else {
                             navigate(`/challenge/${challenge.id}`)
                           }
                         }}
@@ -373,7 +422,7 @@ export default function Home() {
                   </div>
 
                   <div className="text-center">
-                    <button onClick={()=>navigate('/premium')} className="group bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 hover:from-purple-500 hover:via-pink-500 hover:to-orange-500 px-10 py-4 rounded-xl font-bold text-lg shadow-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-purple-500/25 flex items-center space-x-3 mx-auto">
+                    <button onClick={() => navigate('/premium')} className="group bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 hover:from-purple-500 hover:via-pink-500 hover:to-orange-500 px-10 py-4 rounded-xl font-bold text-lg shadow-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-purple-500/25 flex items-center space-x-3 mx-auto">
                       <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform duration-200" />
                       <span>Upgrade To Premium</span>
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
@@ -383,44 +432,44 @@ export default function Home() {
               </div>
 
               {/* Active Groups */}
-              <div className="mt-12">
-                <h3 className="text-2xl font-bold mb-6 bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
-                  Active Groups
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[
-                    { name: "Javascript Masters", members: 245, online: 12 },
-                    { name: "Python Enthusiasts", members: 245, online: 12 },
-                    { name: "Algorithm Study Group", members: 245, online: 12 },
-                    { name: "Data Structures Deep Dive", members: 245, online: 12 },
-                  ].map((group, index) => (
-                    <div
-                      key={index}
-                      className="group bg-gradient-to-br from-slate-800/90 to-slate-700/80 rounded-xl p-6 border border-slate-600/30 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 backdrop-blur-sm"
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-bold text-lg group-hover:text-blue-300 transition-colors duration-200">
-                          {group.name}
-                        </h4>
-                        <div className="w-3 h-3 bg-gradient-to-r from-green-500 to-green-600 rounded-full shadow-lg animate-pulse"></div>
-                      </div>
-                      <p className="text-base text-slate-400 mb-6">
-                        {group.members} Members •{" "}
-                        <span className="text-green-400 font-medium">{group.online} Online</span>
-                      </p>
-                      <button className="group/btn bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 px-6 py-3 rounded-xl text-sm font-semibold w-full shadow-lg transition-all duration-300 transform hover:scale-105 hover:shadow-blue-500/25 flex items-center justify-center space-x-2">
-                        <MessageSquare className="w-4 h-4 group-hover/btn:scale-110 transition-transform duration-200" />
-                        <span>Join Chat</span>
-                        <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-200" />
-                      </button>
+              <div className="mt-12 space-y-12">
+                {joinedGroups.length > 0 && (
+                  <section>
+                    <h3 className="text-2xl font-bold mb-6 bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+                      Active Groups You've Joined
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {joinedGroups.map(group => (
+                        <GroupCard key={group.id} group={group} joined={true} />
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </section>
+                )}
+
+                {notJoinedGroups.length > 0 && (
+                  <section>
+                    <h3 className="text-2xl font-bold mb-6 bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+                      Discover Active Groups
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {notJoinedGroups.map(group => (
+                        <GroupCard key={group.id} group={group} joined={false} />
+                      ))}
+                    </div>
+                  </section>
+                )}
               </div>
             </div>
           </div>
         </main>
       </div>
+      <GiftReceivedModal
+        isOpen={showGiftModal} 
+        onClose={()=>setShowGiftModal(false)}
+         day={giftDay} 
+         xpAmount={xpAmount}
+          onUseGift={handleUseGift}
+      />
     </div>
   )
 }

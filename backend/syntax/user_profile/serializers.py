@@ -2,6 +2,7 @@ from rest_framework import serializers
 from accounts.models import User
 from user_profile.models import Level
 from challenge.models import Submission
+from django.contrib.auth import authenticate
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -60,3 +61,14 @@ class XpHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model=Submission
         fields=['id','xp_awarded','challenge_title','created_at']
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    current_password=serializers.CharField(write_only=True)
+    new_password=serializers.CharField(write_only=True)
+
+    def validate_current_password(self,value):
+        user=self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Current password is incorrect.")
+        return value

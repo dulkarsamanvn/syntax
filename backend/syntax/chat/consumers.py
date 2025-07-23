@@ -49,18 +49,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room_id=self.scope['url_route']['kwargs']['room_id']
         self.room_group_name=f'chat_{self.room_id}'
 
-        await self.channel_layer.group_add(
-            self.room_group_name,
-            self.channel_name
-        )
+        try:
+            room=await sync_to_async(ChatRoom.objects.get)(id=self.room_id)
 
-        await self.accept()
-        logger.info(f"WebSocket connected to room {self.room_id}")
+            if not room.is_active:
+                logger.error(f"Connection rejected: ChatRoom {self.room_id} is inactive.")
+                await self.close()
+                return 
 
-        messages=await get_old_messages(self.room_id)
+            await self.channel_layer.group_add(
+                self.room_group_name,
+                self.channel_name
+            )
 
-        for message in messages:
-            await self.send(text_data=json.dumps(message))
+            await self.accept()
+            logger.info(f"WebSocket connected to room {self.room_id}")
+
+            messages=await get_old_messages(self.room_id)
+
+            for message in messages:
+                await self.send(text_data=json.dumps(message))
+        except ChatRoom.DoesNotExist:
+            logger.error(f"ChatRoom {self.room_id} does not exist")
+            await self.close()
     
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(

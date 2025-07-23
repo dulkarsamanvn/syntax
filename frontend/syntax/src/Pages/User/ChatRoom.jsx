@@ -1,6 +1,7 @@
 import axiosInstance from "@/api/axiosInstance"
 import { useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import { X, Paperclip, Trash2 } from "lucide-react"
 
 function ChatRoom() {
   const { userId } = useParams()
@@ -17,6 +18,7 @@ function ChatRoom() {
   const typingTimeoutRef = useRef(null)
   const roomIdRef = useRef()
   const messagesEndRef = useRef(null)
+  const fileInputRef = useRef(null)
   const navigate = useNavigate()
 
 
@@ -168,6 +170,9 @@ function ChatRoom() {
       socket.send(JSON.stringify(messageData))
       setInput("")
       setSelectedFile(null)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = null
+      }
       setError(null)
       console.log("Message sent successfully")
     } catch (err) {
@@ -260,7 +265,7 @@ function ChatRoom() {
       })
       return res.data.attachment_url
     } catch (err) {
-      console.error('file upload error'.err)
+      console.error('file upload error', err)
       return null
     }
   }
@@ -270,10 +275,10 @@ function ChatRoom() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       <div className="container mx-auto max-w-4xl h-screen flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 bg-white/10 backdrop-blur-md border-b border-white/20">
+        <div className="flex items-center justify-between p-4 bg-white/10 backdrop-blur-md border-b border-white/20 shadow-lg">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-all duration-200 backdrop-blur-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-all duration-200 backdrop-blur-sm hover:scale-105 active:scale-95"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -281,15 +286,20 @@ function ChatRoom() {
             Back
           </button>
 
-          <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${isConnected ? "bg-green-400" : "bg-red-400"}`}></div>
-            <span className="text-white text-sm font-medium">{isConnected ? "Connected" : "Disconnected"}</span>
+          <div className="text-center">
+            {/* <h2 className="text-white text-lg font-semibold">Private Chat</h2> */}
+            <div className="flex items-center justify-center gap-2 text-sm">
+              <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-400 animate-pulse" : "bg-red-400"}`}></div>
+              <span className="text-white/70">{isConnected ? "Connected" : "Disconnected"}</span>
+            </div>
           </div>
+
+         
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="mx-4 mt-4 p-4 bg-red-500/20 border border-red-500/50 text-red-200 rounded-lg backdrop-blur-sm">
+          <div className="mx-4 mt-4 p-4 bg-red-500/20 border border-red-500/50 text-red-200 rounded-lg backdrop-blur-sm animate-pulse">
             <div className="flex items-center gap-2">
               <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -306,11 +316,11 @@ function ChatRoom() {
 
         {/* Messages Container */}
         <div className="flex-1 overflow-hidden mx-4 my-4">
-          <div className="h-full overflow-y-auto bg-white/5 backdrop-blur-md rounded-xl border-2 border-white/20 p-4 space-y-4 shadow-2xl">
+          <div className="h-full overflow-y-auto bg-white/5 backdrop-blur-md rounded-xl border-2 border-white/20 p-4 space-y-4 shadow-2xl" onClick={() => setSelectedMessageId(null)}>
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
-                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-8 h-8 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center mb-6 border border-white/10">
+                  <svg className="w-10 h-10 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -319,8 +329,8 @@ function ChatRoom() {
                     />
                   </svg>
                 </div>
-                <p className="text-white/60 text-lg font-medium">No messages yet</p>
-                <p className="text-white/40 text-sm mt-1">Start the conversation!</p>
+                <p className="text-white/60 text-xl font-medium">No messages yet</p>
+                <p className="text-white/40 text-sm mt-2">Start the conversation!</p>
               </div>
             ) : (
               <>
@@ -331,21 +341,26 @@ function ChatRoom() {
                   >
                     <div className="max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl">
                       <div
-                        className={`relative group cursor-pointer transition-all duration-200 ${msg.sender_id == currentUserId
-                          ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white ml-auto"
-                          : "bg-white/10 text-white backdrop-blur-sm"
-                          } p-3 rounded-2xl shadow-lg hover:shadow-xl ${selectedMessageId === msg.message_id ? "ring-2 ring-red-400" : ""
-                          }`}
-                        onClick={() => handleMessageClick(msg.message_id, msg.sender_id)}
+                        className={`relative group cursor-pointer transition-all duration-200 ${
+                          msg.sender_id == currentUserId
+                            ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white ml-auto hover:from-blue-700 hover:to-blue-800"
+                            : "bg-white/10 text-white backdrop-blur-sm hover:bg-white/15"
+                        } p-4 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] ${
+                          selectedMessageId === msg.message_id ? "ring-2 ring-blue-400 scale-[1.02]" : ""
+                        }`}
+                         onClick={(e) => {
+                            e.stopPropagation(); // Prevent background click from deselecting
+                            handleMessageClick(msg.message_id, msg.sender_id);
+                          }}
                       >
-                        <p className="text-sm sm:text-base break-words">{msg.message}</p>
+                        <p className="text-sm sm:text-base break-words leading-relaxed">{msg.message}</p>
 
                         {msg.attachment && (
-                          <div className="mt-2">
+                          <div className="mt-3">
                             <img
-                              src={msg.attachment}
+                              src={msg.attachment || "/placeholder.svg"}
                               alt="attachment"
-                              className="max-w-xs rounded-lg border border-white/20"
+                              className="max-w-xs rounded-lg border border-white/20 shadow-md"
                               onError={(e) => {
                                 console.error('Failed to load image:', e.target.src);
                                 e.target.style.display = 'none';
@@ -358,40 +373,33 @@ function ChatRoom() {
                         )}
 
                         {msg.reactions && msg.reactions.length > 0 && (
-                          <div className="flex gap-2 mt-1 ml-2">
+                          <div className="flex gap-2 mt-3 flex-wrap">
                             {Object.entries(getGroupedReactions(msg.reactions)).map(([emoji, users]) => (
                               <div
                                 key={emoji}
-                                className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm bg-white/10 text-white shadow ${users.includes(currentUserId) ? "ring-2 ring-blue-400" : ""
-                                  }`}
+                                className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-white/10 text-white shadow-md border border-white/20 ${
+                                  users.includes(currentUserId) ? "ring-2 ring-blue-400 bg-blue-500/20" : ""
+                                }`}
                               >
-                                <span>{emoji}</span>
-                                <span>{users.length}</span>
+                                <span className="text-base">{emoji}</span>
+                                <span className="font-medium">{users.length}</span>
                               </div>
                             ))}
                           </div>
                         )}
 
-
-
-                        {/* Delete option - shown when message is selected */}
+                        {/* Enhanced Delete Option - shown when message is selected */}
                         {selectedMessageId === msg.message_id && msg.sender_id === currentUserId && (
-                          <div className="absolute -top-2 -right-2 z-10">
+                          <div className="absolute -bottom-12 right-0 z-10">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation()
                                 handleDeleteMessage(msg.message_id)
                               }}
-                              className="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-all duration-200 transform hover:scale-110"
+                              className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95 border border-red-400"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                />
-                              </svg>
+                              <Trash2 className="w-4 h-4" />
+                              <span className="text-sm font-medium">Delete</span>
                             </button>
                           </div>
                         )}
@@ -399,14 +407,15 @@ function ChatRoom() {
 
                       {msg.timestamp && (
                         <div
-                          className={`text-xs text-white/40 mt-1 px-1 ${msg.sender_id == currentUserId ? "text-right" : "text-left"
-                            }`}
+                          className={`text-xs text-white/40 mt-2 px-2 ${
+                            msg.sender_id == currentUserId ? "text-right" : "text-left"
+                          }`}
                         >
                           {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       )}
                       {selectedMessageId === msg.message_id && msg.sender_id !== currentUserId && (
-                        <div className="flex gap-1 mt-2 ml-2">
+                        <div className="flex gap-2 mt-3 ml-2">
                           {["❤️", "😂", "👍", "🔥", "👀"].map((emoji) => {
                             const alreadyReacted = msg.reactions?.some(
                               (r) => r.user_id === currentUserId && r.emoji === emoji
@@ -416,8 +425,11 @@ function ChatRoom() {
                               <button
                                 key={emoji}
                                 onClick={() => handleReaction(msg.message_id, emoji)}
-                                className={`text-xl hover:scale-125 transition-transform ${alreadyReacted ? "opacity-100 scale-110 ring ring-blue-400 rounded-full" : "opacity-50"
-                                  }`}
+                                className={`text-2xl hover:scale-125 transition-all duration-200 p-2 rounded-full ${
+                                  alreadyReacted
+                                    ? "opacity-100 scale-110 ring-2 ring-blue-400 bg-blue-500/20"
+                                    : "opacity-60 hover:opacity-100 hover:bg-white/10"
+                                }`}
                                 title={alreadyReacted ? "Remove reaction" : "React"}
                               >
                                 {emoji}
@@ -434,8 +446,8 @@ function ChatRoom() {
                 {/* Typing Indicator */}
                 {typing && (
                   <div className="flex justify-start">
-                    <div className="bg-white/10 backdrop-blur-sm p-3 rounded-2xl">
-                      <div className="flex items-center gap-1">
+                    <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/20">
+                      <div className="flex items-center gap-2">
                         <div className="flex gap-1">
                           <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce"></div>
                           <div
@@ -458,32 +470,62 @@ function ChatRoom() {
           </div>
         </div>
 
-        {/* Input Area */}
+        {/* Enhanced Input Area */}
         <div className="p-4 bg-white/10 backdrop-blur-md border-t border-white/20">
-          <div className="flex gap-2 max-w-4xl mx-auto">
+          <div className="flex gap-3 max-w-4xl mx-auto">
             <div className="flex-1 relative">
+              {/* Hidden file input */}
               <input
                 type="file"
+                ref={fileInputRef}
                 onChange={(e) => setSelectedFile(e.target.files[0])}
+                className="hidden"
+                accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
               />
-              <input
-                type="text"
-                value={input}
-                onChange={handleTyping}
-                onKeyPress={handleKeyPress}
-                className="w-full p-3 pr-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                placeholder="Type a message..."
-                disabled={!isConnected}
-              />
-              {input.trim() && (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+
+              {/* File attachment indicator */}
+              {selectedFile && (
+                <div className="mb-2 flex items-center gap-2 p-2 bg-blue-500/20 rounded-lg border border-blue-500/30">
+                  <Paperclip className="w-4 h-4 text-blue-400" />
+                  <span className="text-blue-400 text-sm font-medium">{selectedFile.name}</span>
+                  <button
+                    onClick={() => setSelectedFile(null)}
+                    className="ml-auto p-1 hover:bg-red-500/20 rounded-full transition-colors"
+                  >
+                    <X className="w-3 h-3 text-red-400" />
+                  </button>
                 </div>
               )}
+
+              <div className="flex gap-2">
+                {/* File attachment button */}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all duration-200 backdrop-blur-sm hover:scale-105 active:scale-95 border border-white/20"
+                  title="Attach file"
+                >
+                  <Paperclip className="w-5 h-5" />
+                </button>
+
+                <input
+                  type="text"
+                  value={input}
+                  onChange={handleTyping}
+                  onKeyDown={handleKeyPress}
+                  className="flex-1 p-4 pr-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-base"
+                  placeholder="Type a message..."
+                  disabled={!isConnected}
+                />
+                {input.trim() && (
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                    <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
+                  </div>
+                )}
+              </div>
             </div>
             <button
               onClick={sendMessage}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 shadow-lg"
+              className="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 shadow-lg"
               disabled={!isConnected || (!input.trim() && !selectedFile)}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

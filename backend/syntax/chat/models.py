@@ -8,12 +8,16 @@ class Group(models.Model):
     member_limit = models.PositiveIntegerField(default=10)
     creator = models.ForeignKey(User, related_name='created_groups', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
 
     def member_count(self):
-        return self.chatroom.memberships.count() if hasattr(self, 'chatroom') else 0
+        if hasattr(self, 'chatroom') and self.chatroom:
+            return self.chatroom.memberships.count()
+        return 0
+
 
 
 class ChatRoom(models.Model):
@@ -22,6 +26,7 @@ class ChatRoom(models.Model):
     participants = models.ManyToManyField(User, through='Membership', related_name='chatrooms')
     last_message = models.ForeignKey('Message', null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
     created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f"Group Chat: {self.group.name}" if self.is_group else f"1-1 ChatRoom {self.id}"

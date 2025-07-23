@@ -84,6 +84,38 @@ function CreateChallengeModal({ isOpen, onClose, onSuccess,isEdit,challengeId,in
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setMessage('')
+
+    if (!form.title.trim()) {
+      setMessage("Title is required.")
+      return
+    }
+    if (!form.description.trim()) {
+      setMessage("Description is required.")
+      return
+    }
+    if (!form.instructions.trim()) {
+      setMessage("Instructions are required.")
+      return
+    }
+
+    if (!form.function_signature.trim()) {
+      setMessage("Function signature is required.")
+      return
+    }
+
+    
+    if (form.languages.length === 0) {
+      setMessage("Please select at least one supported language.")
+      return
+    }
+
+    if (parseInt(form.xp_reward) < 1) {
+      setMessage("XP reward must be at least 1.")
+      return
+    }
+
+
     for (const lang of form.languages) {
       if (!form.initial_code[lang] || !form.solution_code[lang]) {
         setMessage(`Initial and solution code are required for ${lang}`)

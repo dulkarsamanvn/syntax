@@ -8,6 +8,7 @@ function PlanManagement() {
   const [isEdit,setIsEdit]=useState(false)
   const [editPlanData,setEditPlanData]=useState(null)
   const [showModal, setShowModal] = useState(false)
+  const [message,setMessage]=useState({type:'',text:''})
   const [newPlan, setNewPlan] = useState({
     name: "",
     description: "",
@@ -28,14 +29,32 @@ function PlanManagement() {
   }, [])
 
   const handleCreatePlan = async () => {
+    const {name,description,price,duration_days}=newPlan
+    if (!name.trim() || !description.trim() || !price || !duration_days) {
+      setMessage({ type: "error", text: "All fields are required." })
+      return
+    }
+
+    if (parseFloat(price) <= 0) {
+      setMessage({ type: "error", text: "Price must be greater than 0." })
+      return
+    }
+
+    if (parseInt(duration_days) <= 0) {
+      setMessage({ type: "error", text: "Duration must be at least 1 day." })
+      return
+    }
+
     try {
       if(isEdit && editPlanData){
         const res=await axiosInstance.put(`/premium/${editPlanData.id}/update/`,newPlan)
         setPlans((prev)=>
         prev.map((p)=>(p.id===editPlanData.id ? res.data:p)))
+        setMessage({ type: "success", text: "Plan updated successfully." })
       }else{
         const res = await axiosInstance.post("/premium/create/", newPlan)
         setPlans((prev) => [...prev, res.data])
+        setMessage({ type: "success", text: "Plan created successfully." })
       }
       setShowModal(false)
       setNewPlan({ name: "", description: "", price: "", duration_days: "" })
@@ -43,6 +62,7 @@ function PlanManagement() {
       setEditPlanData(null)
     } catch (err) {
       console.error("error creating plan", err)
+      setMessage({ type: "error", text: "Something went wrong. Please try again." })
     }
   }
 
@@ -126,7 +146,6 @@ function PlanManagement() {
         </div>
       </div>
 
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
         {showModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl flex flex-col overflow-hidden">
@@ -139,6 +158,15 @@ function PlanManagement() {
 
               {/* Form Content */}
               <div className="p-6">
+                {message.text && (
+                    <div
+                      className={`text-sm font-medium px-4 py-2 rounded-md ${
+                        message.type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+                      }`}
+                    >
+                      {message.text}
+                    </div>
+                  )}
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Plan Name</label>
@@ -192,6 +220,7 @@ function PlanManagement() {
                       setIsEdit(false)
                       setEditPlanData(null)
                       setNewPlan({ name: "", description: "", price: "", duration_days: "" })
+                      setMessage({ type: "", text: "" })
                     }}
                     className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                   >
@@ -208,7 +237,6 @@ function PlanManagement() {
             </div>
           </div>
         )}
-      </div>
     </div>
   )
 }

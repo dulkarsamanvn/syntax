@@ -1,5 +1,5 @@
 from django.urls import path
-from chat.views import CreateOrGetRoomView,ChatRoomsListView,CreateGroupView,GroupDetailsView,RemoveGroupMemberView,PreviousChatUsers,AddGroupMemberView,MarkUnreadMessagesView,MakeAdminView,UploadAttachmentView
+from chat.views import CreateOrGetRoomView,ChatRoomsListView,CreateGroupView,GroupDetailsView,RemoveGroupMemberView,PreviousChatUsers,AddGroupMemberView,MarkUnreadMessagesView,MakeAdminView,UploadAttachmentView,GroupListView,GroupBlockView,UserGroupListView,JoinGroupView
 
 urlpatterns = [
    path('create-or-get-room/',CreateOrGetRoomView.as_view(),name='create-or-get-room'),
@@ -12,4 +12,8 @@ urlpatterns = [
    path('mark-as-read/',MarkUnreadMessagesView.as_view(),name='mark-as-read'),
    path('group-details/<int:id>/make-admin',MakeAdminView.as_view(),name='make-admin'),
    path('upload-attachment/',UploadAttachmentView.as_view(),name='upload-attachment'),
+   path('group-list/',GroupListView.as_view(),name='group-list'),
+   path('<int:group_id>/block/',GroupBlockView.as_view(),name='block-group'),
+   path('groups-list/user/',UserGroupListView.as_view(),name='groupslist'),
+   path('<int:group_id>/join/',JoinGroupView.as_view(),name='join-group'),
 ]

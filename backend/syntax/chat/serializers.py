@@ -56,9 +56,17 @@ class ChatRoomListSerializer(serializers.ModelSerializer):
 
 
 class GroupSerializer(serializers.ModelSerializer):
+    member_count=serializers.SerializerMethodField()
+    chatroom_id=serializers.SerializerMethodField()
     class Meta:
         model=Group
-        fields=["id", "name", "description", "is_private", "member_limit", "creator", "created_at"]
+        fields=["id", "name", "description", "is_private", "member_limit", "creator", "created_at","is_active",'member_count','chatroom_id']
+
+    def get_member_count(self,obj):
+        return obj.member_count()
+    
+    def get_chatroom_id(self,obj):
+        return obj.chatroom.id if hasattr(obj, 'chatroom') else None
 
 
 class UserSerializer(serializers.ModelSerializer):
