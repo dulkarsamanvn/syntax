@@ -11,9 +11,9 @@ app = Celery('syntax')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
-app.conf.beat_schedule = {
-    'deactivate-expired-premiums': {
-        'task': 'premium.tasks.deactivate_expired_subscriptions',
-        'schedule': crontab(hour=0, minute=0),  # Daily at midnight
-    },
-}
+# app.conf.beat_schedule = {
+#     'deactivate-expired-premiums': {
+#         'task': 'premium.tasks.deactivate_expired_subscriptions',
+#         'schedule': crontab(hour=0, minute=0),  # Daily at midnight
+#     },
+# }

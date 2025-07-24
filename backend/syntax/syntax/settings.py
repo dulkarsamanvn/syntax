@@ -55,7 +55,8 @@ INSTALLED_APPS = [
     'chat',
     'premium',
 
-    'channels'
+    'channels',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -215,3 +216,4 @@ RAZORPAY_KEY_SECRET=config('RAZORPAY_KEY_SECRET')
 
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
