@@ -83,8 +83,24 @@ class XpHistoryView(APIView):
 
     def get(self,request):
         submissions=Submission.objects.filter(user=request.user,xp_awarded__gt=0).order_by('-created_at')
-        serializer=XpHistorySerializer(submissions,many=True)
-        return Response(serializer.data)
+        rewards=DailyXPClaim.objects.filter(user=request.user).order_by('-claimed_at')
+        history=[]
+        for s in submissions:
+            history.append({
+                'id': s.id,
+                'xp_awarded': s.xp_awarded,
+                'challenge_title': s.challenge.title,
+                'created_at': s.created_at.date()
+            })
+        for r in rewards:
+            history.append({
+                'id': f"daily-{r.id}",  
+                'xp_awarded': r.xp_awarded,
+                'challenge_title': f"Day {r.day} Daily XP Reward",
+                'created_at': r.claimed_at
+            })
+        history.sort(key=lambda x:x['created_at'], reverse=True)
+        return Response(history)
 
 
 # view to update the password
@@ -112,6 +128,8 @@ XP_DAY_REWARDS = {
     7: 15, 
 }
 
+#view to check the status whether user has claimed the daily reward or not
+#day cycle continues for around 7 days and then it resets back
 class GiftStatusView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -127,6 +145,9 @@ class GiftStatusView(APIView):
             'xp':xp
         })
 
+
+#view to claim the daily reward.
+# after claiming, daily reward xp gets added to users xp inorder to increase in the xp level.
 class ClaimXpView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -138,7 +159,7 @@ class ClaimXpView(APIView):
         current_day=(total_claims % 7) +1
         xp=XP_DAY_REWARDS.get(current_day,10)
 
-        DailyXPClaim.objects.create(user=request.user,day=current_day)
+        DailyXPClaim.objects.create(user=request.user,day=current_day,xp_awarded=xp)
         request.user.xp+=xp
         request.user.save()
         return Response({"message": f"{xp} XP claimed for Day {current_day}!", "xp": xp},status=status.HTTP_201_CREATED)

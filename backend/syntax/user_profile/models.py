@@ -11,7 +11,8 @@ class Level(models.Model):
 
 class DailyXPClaim(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='xp_claims')
-    day = models.PositiveIntegerField()  
+    day = models.PositiveIntegerField()
+    xp_awarded = models.PositiveIntegerField(null=True, blank=True)
     claimed_at = models.DateField(auto_now_add=True)
 
     class Meta:
