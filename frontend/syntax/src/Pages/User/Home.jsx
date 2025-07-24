@@ -1,6 +1,7 @@
 import axiosInstance from "@/api/axiosInstance"
 import GiftReceivedModal from "@/Components/GiftReceivedModal"
 import GroupCard from "@/Components/GroupCard"
+import useSystemNotificationSocket from "@/hooks/useSystemNotificationSocket"
 import {
   Search,
   Bell,
@@ -21,6 +22,7 @@ import { useNavigate } from "react-router-dom"
 
 export default function Home() {
   const [userProfile, setUserProfile] = useState({
+    id:null,
     username: "",
     profile_photo_url: "",
     level: "",
@@ -59,6 +61,7 @@ export default function Home() {
       try {
         const response = await axiosInstance.get("/profile/", { withCredentials: true })
         setUserProfile({
+          id: response.data.id,
           username: response.data.username,
           profile_photo_url: response.data.profile_photo_url,
           level: response.data.level,
@@ -96,6 +99,8 @@ export default function Home() {
     fetchChallenges()
     fetchGroups()
   }, [])
+
+  useSystemNotificationSocket(userProfile.id)
 
   useEffect(() => {
     const checkGiftStatus = async () => {

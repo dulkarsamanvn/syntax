@@ -16,14 +16,15 @@ from django.core.asgi import get_asgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'syntax.settings')
 django.setup()
 from chat.middleware import JWTAuthFromCookieMiddlewareStack
-import chat.routing
+# import chat.routing
+import syntax.routing
 
 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),
     "websocket": JWTAuthFromCookieMiddlewareStack(
         URLRouter(
-            chat.routing.websocket_urlpatterns
+            syntax.routing.websocket_urlpatterns
         )
     ),
 })

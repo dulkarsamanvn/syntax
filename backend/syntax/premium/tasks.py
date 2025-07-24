@@ -1,10 +1,12 @@
 from celery import shared_task
 from django.utils import timezone
 from premium.models import SubscriptionHistory,UserSubscription
+import datetime
 
 
 @shared_task
 def deactivate_expired_subscriptions():
+    print(f"[{datetime.datetime.now()}] Running scheduled task: Deactivate expired subscriptions")
     now=timezone.now()
     expired_subs=UserSubscription.objects.filter(end_date__lt=now, user__is_premium=True)
 

@@ -9,7 +9,7 @@ from django.db.models import Q
 from rest_framework import status
 from leaderboard.models import UserReport
 from django.core.paginator import Paginator
-
+from notification.utils import send_system_notification
 
 # Custom pagination class for the leaderboard.
 # Sets default page size to 10 users per page but allows customization via query params.
@@ -101,6 +101,11 @@ class ReportStatusUpdateView(APIView):
         if status_value:
             report.status=status_value
             report.save()
+
+            send_system_notification(
+                [report.reported_by],
+                f"Your report status has been updated to {status_value}."
+            )
             return Response({"success": "Status updated"})
         return Response({'error':'no status provided'},status=status.HTTP_400_BAD_REQUEST)
 
