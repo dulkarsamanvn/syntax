@@ -12,7 +12,7 @@ class Command(BaseCommand):
             day_of_week='*',
             day_of_month='*',
             month_of_year='*',
-            timezone='UTC',
+            timezone='Asia/Kolkata',
         )
         
         # Create or update the periodic task

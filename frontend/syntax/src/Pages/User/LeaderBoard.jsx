@@ -166,24 +166,6 @@ function LeaderBoard() {
                             <img src="/images/logo_new.png" alt="SYNTAX Logo" className="h-auto w-auto transition-transform hover:scale-105" />
                         </div>
                     </button>
-                    <div className="flex items-center space-x-2 md:space-x-4">
-                        <button onClick={() => navigate('/leaderboard')} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200" title="leaderboard">
-                            <Award className="w-5 h-5" />
-                        </button>
-                        <button className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200" title="chat">
-                            <MessageSquare className="w-5 h-5" />
-                            <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-xs rounded-full w-4 h-4 flex items-center justify-center shadow-lg animate-pulse">
-                                2
-                            </span>
-                        </button>
-                        <button className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200">
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute -top-1 -right-1 bg-gradient-to-r from-blue-500 to-blue-600 text-xs rounded-full w-4 h-4 flex items-center justify-center shadow-lg animate-pulse">
-                                1
-                            </span>
-                        </button>
-
-                    </div>
                 </div>
             </nav>
             {loading ? (

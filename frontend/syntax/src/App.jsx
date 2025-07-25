@@ -34,6 +34,7 @@ import ResetRoute from './routes/ResetRoute'
 import ResetPassword from './Pages/User/forgetPassword/ResetPassword'
 import SettingsSecurity from './Pages/User/SettingsSecurity'
 import GroupManagement from './Pages/Admin/GroupManagement'
+import Notifications from './Pages/User/Notifications'
 
 function App() {
   return (
@@ -170,6 +171,11 @@ function App() {
           <AdminProtectedRoute>
             <GroupManagement />
           </AdminProtectedRoute>} />
+        
+        <Route path='/notifications' element={
+          <ProtectedRoute>
+            <Notifications />
+          </ProtectedRoute>} />
 
       </Routes>
     </Router>

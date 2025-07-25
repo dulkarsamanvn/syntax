@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from challenge.serializers import ChallengeSerializer,SubmissionSerializer,SubmissionListSerializer,SolutionSerializer
+from challenge.serializers import ChallengeSerializer,SubmissionSerializer,SubmissionListSerializer,SolutionSerializer,ChallengeCreateSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from challenge.models import Challenge,Submission,Solutions
@@ -10,6 +10,8 @@ import json,time
 from challenge.utils import format_input_args
 from django.db.models import Count,Avg
 from django.core.paginator import Paginator
+from accounts.models import User
+from notification.utils import send_system_notification
 
 
 # Handles the creation of a new coding challenge. 
@@ -23,9 +25,16 @@ class ChallengeCreateView(APIView):
                 {'detail': 'You do not have permission to perform this action.'}, 
                 status=status.HTTP_403_FORBIDDEN
             )
-        serializer=ChallengeSerializer(data=request.data)
+        serializer=ChallengeCreateSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            challenge=serializer.save()
+
+            users=User.objects.all()
+            send_system_notification(
+                users,
+                f"New challenge '{challenge.title}' has been posted!"
+            )
+            
             return Response({"message": "Challenge created successfully!"},status=status.HTTP_201_CREATED)
         print("Validation Errors:", serializer.errors)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)

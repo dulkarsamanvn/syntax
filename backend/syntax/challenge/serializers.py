@@ -17,6 +17,11 @@ class ChallengeSerializer(serializers.ModelSerializer):
         return obj.end_time.strftime('%Y-%m-%dT%H:%M') if obj.end_time else None
 
 
+class ChallengeCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Challenge
+        fields='__all__'
+
 class SubmissionSerializer(serializers.Serializer):
     challenge_id = serializers.IntegerField()
     code = serializers.CharField()

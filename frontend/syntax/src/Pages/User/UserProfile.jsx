@@ -151,51 +151,6 @@ function UserProfile() {
               <img src="/images/logo_new.png" alt="SYNTAX Logo" className="h-auto w-auto" />
             </div>
           </button>
-
-          {/* Right side - Notifications and Profile */}
-          <div className="flex items-center space-x-2 md:space-x-4">
-            {/* Mobile search button */}
-            <button className="md:hidden p-2 text-slate-400 hover:text-white">
-              <Search className="w-5 h-5" />
-            </button>
-
-            <button className="p-2 text-slate-400 hover:text-white">
-              <BarChart3 className="w-5 h-5" />
-            </button>
-            <button className="relative p-2 text-slate-400 hover:text-white">
-              <MessageSquare className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                2
-              </span>
-            </button>
-            <button className="relative p-2 text-slate-400 hover:text-white">
-              <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 bg-blue-500 text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                1
-              </span>
-            </button>
-            <button>
-              {/* <div className="flex items-center space-x-2">
-                <img src={user.profile_photo_url} alt="Profile" className="w-8 h-8 rounded-full" />
-                <div className="hidden sm:block text-left">
-                  <div className="text-base font-medium">
-                    {loading ? (
-                      <div className="h-4 bg-slate-700 rounded w-16 animate-pulse"></div>
-                    ) : (
-                      user.username || 'Saman'
-                    )}
-                  </div>
-                  <div className="text-sm text-slate-400">
-                    {loading ? (
-                      <div className="h-3 bg-slate-700 rounded w-12 animate-pulse"></div>
-                    ) : (
-                      `Rank ${user.rank || '15'}`
-                    )}
-                  </div>
-                </div>
-              </div> */}
-            </button>
-          </div>
         </div>
       </nav>
 

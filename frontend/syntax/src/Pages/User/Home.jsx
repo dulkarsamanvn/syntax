@@ -37,6 +37,7 @@ export default function Home() {
   const [showGiftModal, setShowGiftModal] = useState(false)
   const [giftDay, setGiftDay] = useState(null)
   const [xpAmount, setXpAmount] = useState(0)
+  const [unreadCount,setUnreadCount]=useState(0)
   const navigate = useNavigate()
 
   const handleProfile = () => {
@@ -100,7 +101,20 @@ export default function Home() {
     fetchGroups()
   }, [])
 
-  useSystemNotificationSocket(userProfile.id)
+  const fetchUnreadCount=async()=>{
+    try{
+      const res=await axiosInstance.get('/notification/unread-count/')
+      setUnreadCount(res.data.unread_count)
+    }catch(err){
+      console.error('error fetching unread count',err)
+    }
+  }
+
+  useEffect(()=>{
+    fetchUnreadCount()
+  },[])
+
+  useSystemNotificationSocket(userProfile.id,fetchUnreadCount)
 
   useEffect(() => {
     const checkGiftStatus = async () => {
@@ -172,11 +186,11 @@ export default function Home() {
                 2
               </span>
             </button>
-            <button className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200">
+            <button onClick={()=>navigate('/notifications')} className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200">
               <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-blue-500 to-blue-600 text-xs rounded-full w-4 h-4 flex items-center justify-center shadow-lg animate-pulse">
-                1
-              </span>
+              {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-xs rounded-full w-4 h-4 flex items-center justify-center shadow-lg animate-pulse">{unreadCount}</span>
+              )}
             </button>
             <button onClick={handleProfile} className="hover:bg-slate-800 rounded-lg p-1 transition-all duration-200">
               <div className="flex items-center space-x-2">

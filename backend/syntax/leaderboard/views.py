@@ -68,6 +68,10 @@ class CreateReportUserView(APIView):
             reason=report_reason,
             description=description
         )
+        send_system_notification(
+                [request.user],
+                f"Your report against {reported_user.username} has been submitted successfully."
+            )
 
         return Response({'message':'Report Submitted Successfully'},status=status.HTTP_201_CREATED)
 
