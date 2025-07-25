@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from accounts.models import User
 from rest_framework.response import Response
-from chat.models import ChatRoom,Membership,Group
+from chat.models import ChatRoom,Membership,Group,Message
 from chat.serializers import ChatRoomListSerializer,GroupSerializer,UserSerializer
 from rest_framework import status
 from django.utils import timezone
@@ -371,3 +371,10 @@ class JoinGroupView(APIView):
         
         
 
+class UnreadChatCountView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def get(self,request):
+        user=request.user
+        count=Message.objects.filter(is_read=False).exclude(sender=user).filter(chatroom__participants=user).count()
+        return Response({'unread_count':count})

@@ -1,6 +1,7 @@
 import axiosInstance from "@/api/axiosInstance"
 import GiftReceivedModal from "@/Components/GiftReceivedModal"
 import GroupCard from "@/Components/GroupCard"
+import useChatNotificationSocket from "@/hooks/useChatNotificationSocket"
 import useSystemNotificationSocket from "@/hooks/useSystemNotificationSocket"
 import {
   Search,
@@ -38,6 +39,7 @@ export default function Home() {
   const [giftDay, setGiftDay] = useState(null)
   const [xpAmount, setXpAmount] = useState(0)
   const [unreadCount,setUnreadCount]=useState(0)
+  const [unreadChatCount,setUnreadChatCount]=useState(0)
   const navigate = useNavigate()
 
   const handleProfile = () => {
@@ -106,15 +108,29 @@ export default function Home() {
       const res=await axiosInstance.get('/notification/unread-count/')
       setUnreadCount(res.data.unread_count)
     }catch(err){
-      console.error('error fetching unread count',err)
+      console.error('error fetching system notification unread count',err)
+    }
+  }
+
+  const fetchUnreadChatCount=async()=>{
+    try{
+      const res=await axiosInstance.get('/chat/unread-count/')
+      setUnreadChatCount(res.data.unread_count)
+    }catch(err){
+      console.error('error fetching chat count',err)
     }
   }
 
   useEffect(()=>{
-    fetchUnreadCount()
-  },[])
+    if(userProfile.id){
+      fetchUnreadCount()
+      fetchUnreadChatCount()
+    }
+  },[userProfile.id])
 
   useSystemNotificationSocket(userProfile.id,fetchUnreadCount)
+
+  useChatNotificationSocket(userProfile.id,fetchUnreadChatCount)
 
   useEffect(() => {
     const checkGiftStatus = async () => {
@@ -182,9 +198,9 @@ export default function Home() {
             </button>
             <button onClick={() => navigate('/chat')} className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200" title="chat">
               <MessageSquare className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-xs rounded-full w-4 h-4 flex items-center justify-center shadow-lg animate-pulse">
-                2
-              </span>
+              {unreadChatCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-xs rounded-full w-4 h-4 flex items-center justify-center shadow-lg animate-pulse">{unreadChatCount}</span>
+              )}
             </button>
             <button onClick={()=>navigate('/notifications')} className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200">
               <Bell className="w-5 h-5" />
