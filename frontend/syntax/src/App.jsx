@@ -35,6 +35,7 @@ import ResetPassword from './Pages/User/forgetPassword/ResetPassword'
 import SettingsSecurity from './Pages/User/SettingsSecurity'
 import GroupManagement from './Pages/Admin/GroupManagement'
 import Notifications from './Pages/User/Notifications'
+import AnalyticsDashboard from './Pages/Admin/AnalyticsDashboard'
 
 function App() {
   return (
@@ -176,6 +177,11 @@ function App() {
           <ProtectedRoute>
             <Notifications />
           </ProtectedRoute>} />
+        
+        <Route path='/admin/analytics' element={
+          <AdminProtectedRoute>
+            <AnalyticsDashboard />
+          </AdminProtectedRoute>} />
 
       </Routes>
     </Router>

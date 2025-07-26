@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'chat',
     'premium',
     'notification',
+    'dashboard',
 
     'channels',
     'django_celery_beat',

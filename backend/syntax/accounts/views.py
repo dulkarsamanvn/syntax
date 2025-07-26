@@ -174,6 +174,11 @@ class LoginView(APIView):
                 recipient_list=[user.email]
             )
             return Response({'detail':'Email not verified. A new OTP has been sent to your email.'},status=status.HTTP_403_FORBIDDEN)
+        
+
+        user.last_login=timezone.now()
+        user.save(update_fields=['last_login'])
+
         refresh=RefreshToken.for_user(user)
         access_token=str(refresh.access_token)
         refresh_token=str(refresh)
@@ -267,6 +272,9 @@ class GoogleLoginView(APIView):
                     {'detail': 'You have been blocked by the admin.'},
                     status=status.HTTP_403_FORBIDDEN
                 )
+            
+            user.last_login=timezone.now()
+            user.save(update_fields=['last_login'])
 
             refresh=RefreshToken.for_user(user)
             access_token=str(refresh.access_token)
