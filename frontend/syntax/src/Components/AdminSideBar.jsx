@@ -26,7 +26,7 @@ const menuItems = [
   { name: "Plans Management", icon: CreditCard, path: "/admin/plan-management" },
   { name: "Report Management", icon: FileText, path: "/admin/report-management" },
   { name: "Group Management", icon: UserCheck, path: "/admin/group-management" },
-  { name: "Badge Management", icon: Award, path: "#" },
+  { name: "Badge Management", icon: Award, path: "/admin/badge-management" },
   { name: "Notify Management", icon: Bell, path: "#" },
 ]
 

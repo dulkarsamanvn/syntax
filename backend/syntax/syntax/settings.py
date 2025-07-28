@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'premium',
     'notification',
     'dashboard',
+    'badge',
 
     'channels',
     'django_celery_beat',

@@ -27,4 +27,5 @@ urlpatterns = [
     path('premium/', include('premium.urls')),
     path('notification/', include('notification.urls')),
     path('dashboard/', include('dashboard.urls')),
+    path('badge/', include('badge.urls')),
 ]

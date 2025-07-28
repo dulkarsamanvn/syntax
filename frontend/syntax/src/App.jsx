@@ -36,6 +36,7 @@ import SettingsSecurity from './Pages/User/SettingsSecurity'
 import GroupManagement from './Pages/Admin/GroupManagement'
 import Notifications from './Pages/User/Notifications'
 import AnalyticsDashboard from './Pages/Admin/AnalyticsDashboard'
+import BadgeManagement from './Pages/Admin/Badge/BadgeManagement'
 
 function App() {
   return (
@@ -181,6 +182,11 @@ function App() {
         <Route path='/admin/analytics' element={
           <AdminProtectedRoute>
             <AnalyticsDashboard />
+          </AdminProtectedRoute>} />
+        
+        <Route path='/admin/badge-management' element={
+          <AdminProtectedRoute>
+            <BadgeManagement />
           </AdminProtectedRoute>} />
 
       </Routes>

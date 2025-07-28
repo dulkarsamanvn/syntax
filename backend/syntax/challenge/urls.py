@@ -1,5 +1,5 @@
 from django.urls import path
-from challenge.views import ChallengeCreateView,ChallengeListView,ChallengeBlockView,ChallengeDetailView,RunChallengeView,SubmitChallengeView,SubmissionListView,ChallengeUpdateView,SolutionListView,CreateSolutionView,SolutionEditView,SolutionDeleteView
+from challenge.views import ChallengeCreateView,ChallengeListView,ChallengeBlockView,ChallengeDetailView,RunChallengeView,SubmitChallengeView,SubmissionListView,ChallengeUpdateView,SolutionListView,CreateSolutionView,SolutionEditView,SolutionDeleteView,CompletedLanguagesStatsView,UserDomainStatsView
 
 urlpatterns = [
     path('create/',ChallengeCreateView.as_view(),name='create_challenge'),
@@ -14,5 +14,7 @@ urlpatterns = [
     path('<int:challenge_id>/solutions/',SolutionListView.as_view(),name='solution-list'),
     path('<int:challenge_id>/edit-solution/<int:solution_id>/',SolutionEditView.as_view(),name='edit-solution'),
     path('<int:challenge_id>/delete-solution/<int:solution_id>/',SolutionDeleteView.as_view(),name='delete-solution'),
+    path('language-stats/',CompletedLanguagesStatsView.as_view(),name='language-stats'),
+    path('domain-stats/',UserDomainStatsView.as_view(),name='domain-stats'),
 
 ]

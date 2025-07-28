@@ -30,7 +30,7 @@ class DashboardStatsView(APIView):
         total_challenges=Challenge.objects.all().count()
         attempts_this_week=Submission.objects.filter(created_at__gte=week_ago).count()
         total_attempts=Submission.objects.count()
-        avg_completion_rate=Submission.objects.annotate(is_completed_int=Cast('is_completed', output_field=IntegerField())).aggregate(avg=Avg('is_completed_int'))['avg'] or 0
+        avg_completion_rate=round((Submission.objects.annotate(is_completed_int=Cast('is_completed', output_field=IntegerField())).aggregate(avg=Avg('is_completed_int'))['avg'] or 0)*100,2)
 
 
         most_attempted=(Submission.objects.values('challenge__id','challenge__title').annotate(attempt_count=Count('id')).order_by('-attempt_count').first())

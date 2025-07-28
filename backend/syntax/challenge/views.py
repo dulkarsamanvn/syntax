@@ -12,6 +12,7 @@ from django.db.models import Count,Avg
 from django.core.paginator import Paginator
 from accounts.models import User
 from notification.utils import send_system_notification
+from badge.utils import award_badges_on_submission
 
 
 # Handles the creation of a new coding challenge. 
@@ -36,7 +37,6 @@ class ChallengeCreateView(APIView):
             )
             
             return Response({"message": "Challenge created successfully!"},status=status.HTTP_201_CREATED)
-        print("Validation Errors:", serializer.errors)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -460,7 +460,7 @@ class SubmitChallengeView(APIView):
 
             xp_awarded=challenge.xp_reward if is_completed and not already_completed else 0
 
-            Submission.objects.create(
+            submission=Submission.objects.create(
                 user=user,
                 challenge=challenge,
                 code=code,
@@ -475,6 +475,8 @@ class SubmitChallengeView(APIView):
             if xp_awarded:
                 user.xp +=xp_awarded
                 user.save()
+            
+            award_badges_on_submission(submission)
             
             console_output.append({
                 'type':'info',
@@ -591,3 +593,59 @@ class SolutionEditView(APIView):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
+class CompletedLanguagesStatsView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def get(self,request):
+        user=request.user
+
+        completed_count=(
+            Submission.objects.filter(user=user,is_completed=True)
+            .values('language')
+            .annotate(completed_count=Count('challenge',distinct=True))
+        )
+
+        return Response(list(completed_count))
+    
+
+class UserDomainStatsView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def get(self,request):
+        user=request.user
+
+        total_submissions=Submission.objects.filter(user=user).count()
+        completed_challenge_ids=Submission.objects.filter(user=user,is_completed=True).values_list('challenge_id',flat=True).distinct()
+
+        total_completed=completed_challenge_ids.count()
+
+        challenges=Challenge.objects.filter(id__in=completed_challenge_ids)
+
+        completed_dict = {
+            'easy': challenges.filter(difficulty='easy').count(),
+            'medium': challenges.filter(difficulty='medium').count(),
+            'hard': challenges.filter(difficulty='hard').count(),
+        }
+        
+        total_challenges=Challenge.objects.values('difficulty').annotate(count=Count('id'))
+        total_dict = {"easy": 0, "medium": 0, "hard": 0}
+
+        for item in total_challenges:
+            level=item['difficulty']
+            if level in total_dict:
+                total_dict[level]=item['count']
+
+        acceptance_rate=(
+            (total_completed/total_submissions) * 100 if total_submissions > 0 else 0
+        )
+
+        return Response({
+            'challenges_completed':total_completed,
+            'acceptance_rate':round(acceptance_rate,2),
+            'easy_completed':completed_dict['easy'],
+            'easy_total':total_dict['easy'],
+            'medium_completed':completed_dict['medium'],
+            'hard_completed':completed_dict['hard'],
+            'medium_total':total_dict['medium'],
+            'hard_total':total_dict['hard'],
+        })

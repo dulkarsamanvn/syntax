@@ -9,17 +9,18 @@ function UserProfile() {
   const [user, setUser] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [xpHistory,setXpHistory]=useState([])
-  
+  const [xpHistory, setXpHistory] = useState([])
+  const [earnedBadges, setEarnedBadges] = useState([])
+  const [languageStats,setLanguageStats]=useState([])
+  const [domainStats,setDomainStats]=useState({})
+
   const navigate = useNavigate()
-  const location=useLocation()
+  const location = useLocation()
 
   const fetchProfile = async () => {
     try {
       setLoading(true)
       const res = await axiosInstance.get('/profile/', { withCredentials: true })
-      console.log(res.data)
-      console.log('profile photo',res.data.profile_photo_url)
       setUser(res.data)
     } catch (err) {
       setError('Failed to load profile')
@@ -29,17 +30,44 @@ function UserProfile() {
     }
   }
 
-  useEffect(()=>{
-    const fetchXpHistory=async()=>{
-      try{
-        const res=await axiosInstance.get('/profile/xp-history/')
+  const fetchBadges = async () => {
+    try {
+      const res = await axiosInstance.get('/badge/earned-badges/')
+      setEarnedBadges(res.data)
+    } catch (err) {
+      console.error('error fetching badges', err)
+    }
+  }
+
+  const fetchLanguageStats=async()=>{
+    try{
+      const res=await axiosInstance.get('/challenge/language-stats/')
+      setLanguageStats(res.data)
+    }catch(err){
+      console.error('error fetching language stats')
+    }
+  }
+
+  const fetchDomainStats=async()=>{
+    try{
+      const res=await axiosInstance.get('/challenge/domain-stats/')
+      setDomainStats(res.data)
+    }catch(err){
+      console.error('error fetching domain stats')
+    }
+  }
+
+  useEffect(() => {
+    const fetchXpHistory = async () => {
+      try {
+        const res = await axiosInstance.get('/profile/xp-history/')
         setXpHistory(res.data)
-      }catch(err){
-        console.error('error fetching xp history',err)
+      } catch (err) {
+        console.error('error fetching xp history', err)
       }
     }
     fetchXpHistory()
-  },[])
+  }, [])
 
   const handleRedirect = () => {
     navigate('/home')
@@ -50,8 +78,12 @@ function UserProfile() {
   }
 
   useEffect(() => {
+
     fetchProfile()
-    
+    fetchBadges()
+    fetchLanguageStats()
+    fetchDomainStats()
+
   }, [location.state?.refresh])
 
   // Default values to prevent layout shifts
@@ -70,38 +102,38 @@ function UserProfile() {
     hardTotal: 234,
   }
 
-  const badges = [
-    {
-      icon: Clock,
-      title: "Fast Solver",
-      description: "Solved 10 challenges in under 5 minutes each",
-      color: "bg-blue-600",
-    },
-    {
-      icon: Code2,
-      title: "Debugging Master",
-      description: "Fixed 50 bugs across various challenges",
-      color: "bg-blue-600",
-    },
-    {
-      icon: Zap,
-      title: "Elite Coder",
-      description: "Solved 10+ challenges Without Hint",
-      color: "bg-blue-600",
-    },
-    {
-      icon: Users,
-      title: "Social Collaborator",
-      description: "Helped 20+ Members solve challenges",
-      color: "bg-blue-600",
-    },
-  ]
+  // const badges = [
+  //   {
+  //     icon: Clock,
+  //     title: "Fast Solver",
+  //     description: "Solved 10 challenges in under 5 minutes each",
+  //     color: "bg-blue-600",
+  //   },
+  //   {
+  //     icon: Code2,
+  //     title: "Debugging Master",
+  //     description: "Fixed 50 bugs across various challenges",
+  //     color: "bg-blue-600",
+  //   },
+  //   {
+  //     icon: Zap,
+  //     title: "Elite Coder",
+  //     description: "Solved 10+ challenges Without Hint",
+  //     color: "bg-blue-600",
+  //   },
+  //   {
+  //     icon: Users,
+  //     title: "Social Collaborator",
+  //     description: "Helped 20+ Members solve challenges",
+  //     color: "bg-blue-600",
+  //   },
+  // ]
 
-  const languages = [
-    { name: "Python", progress: 12, maxProgress: 150 },
-    { name: "Python 3", progress: 127, maxProgress: 150 },
-    { name: "Javascript", progress: 44, maxProgress: 150 },
-  ]
+  // const languages = [
+  //   { name: "Python", progress: 12, maxProgress: 150 },
+  //   { name: "Python 3", progress: 127, maxProgress: 150 },
+  //   { name: "Javascript", progress: 44, maxProgress: 150 },
+  // ]
 
   const recentActivity = [
     { name: "Longest SubString", time: "2 hours ago" },
@@ -129,7 +161,7 @@ function UserProfile() {
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Error Loading Profile</h2>
           <p className="text-slate-400 mb-4">{error}</p>
-          <button 
+          <button
             onClick={fetchProfile}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
           >
@@ -229,7 +261,7 @@ function UserProfile() {
         </div>
 
         {/* Edit Profile Button */}
-        <button onClick={()=>navigate('/edit-profile')} className="absolute bottom-6 right-6 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-medium transition-colors">
+        <button onClick={() => navigate('/edit-profile')} className="absolute bottom-6 right-6 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-medium transition-colors">
           Edit Profile
         </button>
       </div>
@@ -296,24 +328,28 @@ function UserProfile() {
             ) : (
               <div className="bg-slate-800 rounded-2xl p-6 text-white">
                 <h3 className="text-xl font-semibold mb-4">Badges</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  {badges.map((badge, index) => {
-                    const IconComponent = badge.icon
-                    return (
-                      <div key={index} className="bg-slate-700/50 rounded-xl p-4">
-                        <div className="flex items-start gap-3">
-                          <div className={`${badge.color} rounded-lg p-2 flex-shrink-0`}>
-                            <IconComponent className="w-5 h-5 text-white" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-white mb-1">{badge.title}</h4>
-                            <p className="text-slate-400 text-sm leading-relaxed">{badge.description}</p>
-                          </div>
+
+                {earnedBadges.length === 0 ? (
+                  <p className="text-slate-400">No badges earned yet.</p>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4">
+                    {earnedBadges.map((badge, index) => (
+                      <div key={index} className="bg-slate-700/50 rounded-xl p-4 flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-blue-600 flex items-center justify-center">
+                          {badge.icon ? (
+                            <img src={badge.icon} alt={badge.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-white text-sm">🏅</span>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-white">{badge.title}</h4>
+                          <p className="text-slate-400 text-sm">{badge.description}</p>
                         </div>
                       </div>
-                    )
-                  })}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -327,11 +363,11 @@ function UserProfile() {
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-300">Challenges Completed</span>
-                    <span className="font-semibold text-white">{userData.challengesCompleted}</span>
+                    <span className="font-semibold text-white">{domainStats.challenges_completed}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-300">Acceptance Rate</span>
-                    <span className="font-semibold text-white">{userData.acceptanceRate}%</span>
+                    <span className="font-semibold text-white">{domainStats.acceptance_rate}%</span>
                   </div>
                 </div>
 
@@ -341,13 +377,13 @@ function UserProfile() {
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-green-400 text-sm font-medium">Easy</span>
                       <span className="text-slate-400 text-sm">
-                        {userData.easyCompleted}/{userData.easyTotal}
+                        {domainStats.easy_completed}/{domainStats.easy_total}
                       </span>
                     </div>
                     <div className="w-full bg-slate-700 rounded-full h-2">
                       <div
                         className="bg-green-500 h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${(userData.easyCompleted / userData.easyTotal) * 100}%` }}
+                        style={{ width: `${(domainStats.easy_completed / domainStats.easy_total) * 100}%` }}
                       ></div>
                     </div>
                   </div>
@@ -357,13 +393,13 @@ function UserProfile() {
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-orange-400 text-sm font-medium">Medium</span>
                       <span className="text-slate-400 text-sm">
-                        {userData.mediumCompleted}/{userData.mediumTotal}
+                        {domainStats.medium_completed}/{domainStats.medium_total}
                       </span>
                     </div>
                     <div className="w-full bg-slate-700 rounded-full h-2">
                       <div
                         className="bg-orange-500 h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${(userData.mediumCompleted / userData.mediumTotal) * 100}%` }}
+                        style={{ width: `${(domainStats.medium_completed / domainStats.medium_total) * 100}%` }}
                       ></div>
                     </div>
                   </div>
@@ -373,13 +409,13 @@ function UserProfile() {
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-red-400 text-sm font-medium">Hard</span>
                       <span className="text-slate-400 text-sm">
-                        {userData.hardCompleted}/{userData.hardTotal}
+                        {domainStats.hard_completed}/{domainStats.hard_total}
                       </span>
                     </div>
                     <div className="w-full bg-slate-700 rounded-full h-2">
                       <div
                         className="bg-red-500 h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${(userData.hardCompleted / userData.hardTotal) * 100}%` }}
+                        style={{ width: `${(domainStats.hard_completed / domainStats.hard_total) * 100}%` }}
                       ></div>
                     </div>
                   </div>
@@ -394,16 +430,16 @@ function UserProfile() {
               <div className="bg-slate-800 rounded-2xl p-6 text-white">
                 <h3 className="text-xl font-semibold mb-6">Languages</h3>
                 <div className="space-y-6">
-                  {languages.map((language, index) => (
+                  {languageStats.map((lang, index) => (
                     <div key={index}>
                       <div className="flex justify-between items-center mb-3">
-                        <span className="text-slate-300 font-medium">{language.name}</span>
-                        <span className="text-white font-semibold">{language.progress}</span>
+                        <span className="text-slate-300 font-medium">{lang.language}</span>
+                        <span className="text-white font-semibold">{lang.completed_count}</span>
                       </div>
                       <div className="w-full bg-slate-700 rounded-full h-2">
                         <div
-                          className="bg-blue-500 h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${(language.progress / language.maxProgress) * 100}%` }}
+                          className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${(lang.completed_count / 100) * 100}%` }}
                         ></div>
                       </div>
                     </div>
@@ -412,28 +448,6 @@ function UserProfile() {
               </div>
             )}
           </div>
-
-          {/* Recent Activity Card - Full Width */}
-          {loading ? (
-            <div className="mt-6">
-              <LoadingCard />
-            </div>
-          ) : (
-            <div className="mt-6 bg-slate-800 rounded-2xl p-6 text-white">
-              <h3 className="text-xl font-semibold mb-6">Recent Activity</h3>
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <div
-                    key={index}
-                    className="flex justify-between items-center py-3 border-b border-slate-700/50 last:border-b-0"
-                  >
-                    <span className="text-slate-300">{activity.name}</span>
-                    <span className="text-slate-500 text-sm">{activity.time}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

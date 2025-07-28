@@ -42,7 +42,7 @@ function EditProfile() {
     const handleChange = (e) => {
         const { name, files, value } = e.target
         if (name === 'profile_photo') {
-            setFormData(prev => ({ ...prev, profile_photo: files[0],profile_photo_url: URL.createObjectURL(files[0]) }))
+            setFormData(prev => ({ ...prev, profile_photo: files[0], profile_photo_url: URL.createObjectURL(files[0]) }))
         } else {
             setFormData(prev => ({ ...prev, [name]: value }))
         }
@@ -99,32 +99,32 @@ function EditProfile() {
                     <div className="relative group">
                         {/* Profile Image */}
                         <div className="w-24 h-24 rounded-full bg-slate-700 overflow-hidden">
-                        <img
-                            src={formData.profile_photo_url || "/placeholder.svg?height=96&width=96"}
-                            alt="Profile Avatar"
-                            className="w-full h-full object-cover"
-                        />
-                       
+                            <img
+                                src={formData.profile_photo_url || "/placeholder.svg?height=96&width=96"}
+                                alt="Profile Avatar"
+                                className="w-full h-full object-cover"
+                            />
+
                         </div>
 
                         {/* Hidden File Input */}
                         <input
-                        id="profile-photo-input"
-                        type="file"
-                        name="profile_photo"
-                        accept="image/*"
-                        onChange={handleChange}
-                        className="hidden"
+                            id="profile-photo-input"
+                            type="file"
+                            name="profile_photo"
+                            accept="image/*"
+                            onChange={handleChange}
+                            className="hidden"
                         />
 
                         {/* Camera Button */}
                         <label htmlFor="profile-photo-input">
-                        <div className="absolute bottom-0 right-0 w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center hover:bg-slate-500 transition-colors cursor-pointer">
-                            <Camera className="w-4 h-4 text-white" />
-                        </div>
+                            <div className="absolute bottom-0 right-0 w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center hover:bg-slate-500 transition-colors cursor-pointer">
+                                <Camera className="w-4 h-4 text-white" />
+                            </div>
                         </label>
                     </div>
-                    </div>
+                </div>
 
                 {/* Main Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -138,7 +138,7 @@ function EditProfile() {
                                     Display Name
                                 </Label>
                                 <Input
-                                    type="text" name='username'  value={formData.username} onChange={handleChange}
+                                    type="text" name='username' value={formData.username} onChange={handleChange}
                                     className="bg-slate-700/50 border-slate-600 text-white placeholder-gray-400 focus:border-blue-500"
                                 />
                             </div>
@@ -155,7 +155,7 @@ function EditProfile() {
                             </div>
 
                             <div>
-                                <Label htmlFor="email"  className="text-sm text-gray-400 mb-2 block">
+                                <Label htmlFor="email" className="text-sm text-gray-400 mb-2 block">
                                     Email
                                 </Label>
                                 <Input
@@ -286,11 +286,3 @@ function EditProfile() {
 
 export default EditProfile
 
-
-{/* <h1>Edit Profile</h1>
-        <form onSubmit={handleSubmit}>
-            <input type="text" name='username'  value={formData.username} onChange={handleChange}/>
-            <input type="file" name='profile_photo' accept='image/*' onChange={handleChange} />
-            <button type="submit">Save Changes</button>
-            {message && <p>{message}</p>}
-        </form> */}
