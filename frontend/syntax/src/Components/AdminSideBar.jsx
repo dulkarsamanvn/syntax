@@ -27,7 +27,7 @@ const menuItems = [
   { name: "Report Management", icon: FileText, path: "/admin/report-management" },
   { name: "Group Management", icon: UserCheck, path: "/admin/group-management" },
   { name: "Badge Management", icon: Award, path: "/admin/badge-management" },
-  { name: "Notify Management", icon: Bell, path: "#" },
+  // { name: "Notify Management", icon: Bell, path: "#" },
 ]
 
 function AdminSideBar() {

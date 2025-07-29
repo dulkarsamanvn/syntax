@@ -1,4 +1,6 @@
 import json
+from datetime import date,timedelta
+
 
 def format_input_args(input_str,language):
     try:
@@ -28,3 +30,21 @@ def format_input_args(input_str,language):
     else:
         return str(parsed)
         
+
+
+def update_user_streak(user):
+    today=date.today()
+
+    if user.last_solved_date==today:
+        return
+    
+    if user.last_solved_date== today-timedelta(days=1):
+        user.current_streak+=1
+    else:
+        user.current_streak=1
+    
+    if user.current_streak > user.longest_streak:
+        user.longest_streak=user.current_streak
+    
+    user.last_solved_date=today
+    user.save()

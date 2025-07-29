@@ -7,7 +7,7 @@ from rest_framework import status
 from challenge.models import Challenge,Submission,Solutions
 import requests
 import json,time
-from challenge.utils import format_input_args
+from challenge.utils import format_input_args,update_user_streak
 from django.db.models import Count,Avg
 from django.core.paginator import Paginator
 from accounts.models import User
@@ -278,9 +278,20 @@ int main() {{
             piston_res=requests.post(PISTON_URL,json=data)
             result=piston_res.json()
 
-            actual_output = result.get('run', {}).get('stdout', '').strip().lower()
-            expected_output=case['output'].strip().lower()
+            # actual_output = result.get('run', {}).get('stdout', '').strip().lower()
+            # expected_output=case['output'].strip().lower()
+            # stderr = result.get('run', {}).get('stderr', '') or result.get('compile', {}).get('stderr', '')
+            actual_output_raw = result.get('run', {}).get('stdout', '').strip()
+            expected_output_raw = case['output'].strip()
             stderr = result.get('run', {}).get('stderr', '') or result.get('compile', {}).get('stderr', '')
+
+            try:
+                actual_parsed = json.loads(actual_output_raw)
+                expected_parsed = json.loads(expected_output_raw)
+                is_passed = actual_parsed == expected_parsed
+            except Exception:
+                is_passed = actual_output_raw.lower() == expected_output_raw.lower()
+
             if stderr:
                 console_output.append({
                     "type": "error",
@@ -290,7 +301,7 @@ int main() {{
                         "error": stderr.strip()
                     }
                 })
-            elif actual_output==expected_output:
+            elif is_passed:
                 console_output.append({
                     'type':'success',
                     "message": f"Test Case {i + 1}: PASSED"
@@ -302,8 +313,8 @@ int main() {{
                     "message": f"Test Case {i + 1}: FAILED",
                     "details": {
                         "input": case['input'],
-                        "expected": expected_output,
-                        "actual": actual_output
+                        "expected": expected_output_raw,
+                        "actual": actual_output_raw
                     }
                 })
         
@@ -418,9 +429,21 @@ class SubmitChallengeView(APIView):
                 piston_res=requests.post(PISTON_URL,json=data)
                 result=piston_res.json()
 
-                actual_output = result.get('run', {}).get('stdout', '').strip().lower()
-                expected_output=case['output'].strip().lower()
+                # actual_output = result.get('run', {}).get('stdout', '').strip().lower()
+                # expected_output=case['output'].strip().lower()
+                # stderr = result.get('run', {}).get('stderr', '') or result.get('compile', {}).get('stderr', '')
+
+                actual_output_raw = result.get('run', {}).get('stdout', '').strip()
+                expected_output_raw = case['output'].strip()
                 stderr = result.get('run', {}).get('stderr', '') or result.get('compile', {}).get('stderr', '')
+
+                try:
+                    actual_parsed = json.loads(actual_output_raw)
+                    expected_parsed = json.loads(expected_output_raw)
+                    is_passed = actual_parsed == expected_parsed
+                except Exception:
+                    is_passed = actual_output_raw.lower() == expected_output_raw.lower()
+
 
                 if stderr:
                     if case.get('hidden'):
@@ -430,7 +453,7 @@ class SubmitChallengeView(APIView):
                         })
                     continue
 
-                if actual_output==expected_output:
+                if is_passed:
                     passed+=1
                     console_output.append({
                         'type': 'success',
@@ -440,16 +463,16 @@ class SubmitChallengeView(APIView):
                     if case.get('hidden'):
                         failed_hidden_cases.append({
                             'input':input_args,
-                            'actual':actual_output,
-                            'expected':expected_output
+                            'actual':actual_output_raw,
+                            'expected':expected_output_raw
                         })
                     console_output.append({
                         'type': 'error',
                         'message': f"Test Case {i + 1} {'(Hidden)' if case.get('hidden') else ''}: FAILED",
                         'details': {
                             'input':input_args,
-                            'actual':actual_output,
-                            'expected':expected_output
+                            'actual':actual_output_raw,
+                            'expected':expected_output_raw
                         }
                     })
             
@@ -475,6 +498,7 @@ class SubmitChallengeView(APIView):
             if xp_awarded:
                 user.xp +=xp_awarded
                 user.save()
+                update_user_streak(user)
             
             award_badges_on_submission(submission)
             
@@ -506,7 +530,7 @@ class SubmitChallengeView(APIView):
                     'details': error
                 })
             
-            attempts = Submission.objects.filter(user=user, challenge=challenge).count() + 1      
+            attempts = Submission.objects.filter(user=user, challenge=challenge).count()     
             summary={
                 'passed':passed,
                 'total':total,
