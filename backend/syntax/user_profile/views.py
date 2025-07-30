@@ -2,10 +2,10 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from user_profile.serializers import UserProfileSerializer,LevelSerializer,XpHistorySerializer,ChangePasswordSerializer
+from user_profile.serializers import UserProfileSerializer,LevelSerializer,XpHistorySerializer,ChangePasswordSerializer,ProfileDetailsSerializer
 from rest_framework.parsers import MultiPartParser,FormParser
 from rest_framework import status
-from user_profile.models import Level,DailyXPClaim
+from user_profile.models import Level,DailyXPClaim,UserProfile
 from challenge.models import Submission
 from datetime import date
 
@@ -163,3 +163,23 @@ class ClaimXpView(APIView):
         request.user.xp+=xp
         request.user.save()
         return Response({"message": f"{xp} XP claimed for Day {current_day}!", "xp": xp},status=status.HTTP_201_CREATED)
+
+
+
+#view to get and update user profile details including bio and social links
+# create a profile for user using signals and checked if profile existed. if not, created a user profile
+class ProfileDetailsView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def get(self,request):
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        serializer=ProfileDetailsSerializer(profile)
+        return Response(serializer.data)
+    
+    def patch(self,request):
+        profile=request.user.profile
+        serializer=ProfileDetailsSerializer(profile,data=request.data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message':'Profile Updated Successfully'})
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)

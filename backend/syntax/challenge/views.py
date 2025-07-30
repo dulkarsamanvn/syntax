@@ -13,6 +13,7 @@ from django.core.paginator import Paginator
 from accounts.models import User
 from notification.utils import send_system_notification
 from badge.utils import award_badges_on_submission
+from django.db.models import Q
 
 
 # Handles the creation of a new coding challenge. 
@@ -106,10 +107,28 @@ class ChallengeListView(APIView):
         user=request.user
         is_admin=user.is_staff or user.is_superuser
 
+        search_query=request.GET.get('search','').strip()
+        difficulty_filter=request.GET.get('difficulty','').strip()
+        tag_filter=request.GET.get('tag','').strip()
+
+
         if is_admin:
-            challenges=Challenge.objects.all().order_by('-created_at')
+            challenges=Challenge.objects.all()
         else:
-            challenges=Challenge.objects.filter(is_active=True).order_by('-created_at')
+            challenges=Challenge.objects.filter(is_active=True)
+        
+        if search_query:
+            challenges=challenges.filter(
+                Q(title__icontains=search_query)
+            )
+        
+        if difficulty_filter and difficulty_filter.lower() != 'all':
+            challenges=challenges.filter(difficulty__iexact=difficulty_filter)
+        
+        if tag_filter and tag_filter.lower() !='all':
+            challenges=challenges.filter(tags__icontains=tag_filter)
+        
+        challenges=challenges.order_by('-created_at')
 
         if is_admin:
             page=int(request.GET.get('page',1))
@@ -142,7 +161,12 @@ class ChallengeListView(APIView):
         
         return Response({
             'results':challenge_list,
-            'count':total_count
+            'count':total_count,
+            'search_query':search_query,
+            'applied_filters': {
+                'difficulty': difficulty_filter,
+                'tag': tag_filter
+            }
         },status=status.HTTP_200_OK)
         
 

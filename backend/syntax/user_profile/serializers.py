@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from accounts.models import User
-from user_profile.models import Level
+from user_profile.models import Level,UserProfile
 from challenge.models import Submission
 from django.contrib.auth import authenticate
 
@@ -72,3 +72,10 @@ class ChangePasswordSerializer(serializers.Serializer):
         if not user.check_password(value):
             raise serializers.ValidationError("Current password is incorrect.")
         return value
+
+
+class ProfileDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=UserProfile
+        fields=['tagline','bio','github_url', 'twitter_url', 'discord']
+        

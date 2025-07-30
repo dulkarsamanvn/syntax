@@ -16,14 +16,15 @@ import {
   Shield,
   Sparkles,
   ArrowRight,
-  CircleCheck
+  CircleCheck,
+  X
 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 export default function Home() {
   const [userProfile, setUserProfile] = useState({
-    id:null,
+    id: null,
     username: "",
     profile_photo_url: "",
     level: "",
@@ -38,13 +39,91 @@ export default function Home() {
   const [showGiftModal, setShowGiftModal] = useState(false)
   const [giftDay, setGiftDay] = useState(null)
   const [xpAmount, setXpAmount] = useState(0)
-  const [unreadCount,setUnreadCount]=useState(0)
-  const [unreadChatCount,setUnreadChatCount]=useState(0)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [unreadChatCount, setUnreadChatCount] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeFilter, setActiveFilter] = useState('All')
+  const [isLoading, setIsLoading] = useState(false)
+  const [filteredChallenges, setFilteredChallenges] = useState([])
+  const [availableTags, setAvailableTags] = useState([])
+
+
   const navigate = useNavigate()
+
+  const filterTags = ["All", "easy", "medium", "hard", ...availableTags.slice(0, 8)]
 
   const handleProfile = () => {
     navigate("/profile")
   }
+
+  const debounce = (func, wait) => {
+    let timeout
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout)
+        func(...args)
+      }
+      clearTimeout(timeout)
+      timeout = setTimeout(later, wait)
+    }
+  }
+
+  const extractTagsFromChallenges = (challengeList) => {
+    const allTags = []
+    challengeList.forEach(challenge => {
+      if (challenge.tags && challenge.tags.length > 0) {
+        allTags.push(...challenge.tags)
+      }
+    });
+
+    const uniqueTags = [...new Set(allTags)]
+    setAvailableTags(uniqueTags)
+  }
+
+  const performSearch = useCallback(
+    debounce(async (query, filter) => {
+      try {
+        const params = new URLSearchParams()
+        if (query.trim()) {
+          params.append('search', query.trim())
+        }
+        if (filter && filter !== 'All') {
+          // Check if it's a difficulty filter or tag filter
+          if (['easy', 'medium', 'hard'].includes(filter.toLowerCase())) {
+            params.append('difficulty', filter.toLowerCase())
+          } else {
+            params.append('tag', filter)
+          }
+        }
+        const res = await axiosInstance.get(`/challenge/list/?${params.toString()}`)
+        setChallenges(res.data.results)
+        setFilteredChallenges(res.data.results)
+      } catch (err) {
+        console.error('error searching challenges', err)
+      }
+    }, 300),
+    []
+  )
+
+  const handleSearchChange = (e) => {
+    const query = e.target.value
+    setSearchQuery(query)
+    performSearch(query, activeFilter)
+  }
+
+  const handleFilterChange = (filter) => {
+    setActiveFilter(filter)
+    performSearch(searchQuery, filter)
+  }
+
+  const clearSearch = () => {
+    setSearchQuery('')
+    setActiveFilter('All')
+    setFilteredChallenges(challenges)
+    fetchChallenges()
+  }
+
+
 
   useEffect(() => {
     const fetchSubscription = async () => {
@@ -58,6 +137,19 @@ export default function Home() {
 
     fetchSubscription()
   }, [])
+
+  const fetchChallenges = async () => {
+    try {
+      const res = await axiosInstance.get("/challenge/list/")
+      setChallenges(res.data.results)
+      setFilteredChallenges(res.data.results)
+      extractTagsFromChallenges(res.data.results)
+    } catch (err) {
+      console.error("error fetching challenges", err)
+    }
+  }
+
+
 
   useEffect(() => {
     const fetch_profile = async () => {
@@ -89,48 +181,41 @@ export default function Home() {
     }
 
 
-    const fetchChallenges = async () => {
-      try {
-        const res = await axiosInstance.get("/challenge/list/")
-        setChallenges(res.data.results)
-      } catch (err) {
-        console.error("error fetching challenges", err)
-      }
-    }
-
     fetch_profile()
     fetchChallenges()
     fetchGroups()
   }, [])
 
-  const fetchUnreadCount=async()=>{
-    try{
-      const res=await axiosInstance.get('/notification/unread-count/')
+
+
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await axiosInstance.get('/notification/unread-count/')
       setUnreadCount(res.data.unread_count)
-    }catch(err){
-      console.error('error fetching system notification unread count',err)
+    } catch (err) {
+      console.error('error fetching system notification unread count', err)
     }
   }
 
-  const fetchUnreadChatCount=async()=>{
-    try{
-      const res=await axiosInstance.get('/chat/unread-count/')
+  const fetchUnreadChatCount = async () => {
+    try {
+      const res = await axiosInstance.get('/chat/unread-count/')
       setUnreadChatCount(res.data.unread_count)
-    }catch(err){
-      console.error('error fetching chat count',err)
+    } catch (err) {
+      console.error('error fetching chat count', err)
     }
   }
 
-  useEffect(()=>{
-    if(userProfile.id){
+  useEffect(() => {
+    if (userProfile.id) {
       fetchUnreadCount()
       fetchUnreadChatCount()
     }
-  },[userProfile.id])
+  }, [userProfile.id])
 
-  useSystemNotificationSocket(userProfile.id,fetchUnreadCount)
+  useSystemNotificationSocket(userProfile.id, fetchUnreadCount)
 
-  useChatNotificationSocket(userProfile.id,fetchUnreadChatCount)
+  useChatNotificationSocket(userProfile.id, fetchUnreadChatCount)
 
   useEffect(() => {
     const checkGiftStatus = async () => {
@@ -148,16 +233,16 @@ export default function Home() {
     checkGiftStatus()
   }, [])
 
-  const handleUseGift=async()=>{
-    try{
+  const handleUseGift = async () => {
+    try {
       await axiosInstance.post('/profile/claim-reward/')
       setUserProfile((prev) => ({ ...prev, xp: prev.xp + xpAmount }))
       setTimeout(() => {
         setShowGiftModal(false)
       }, 2000);
 
-    }catch(err){
-      console.error('Failed to claim xp reward',err)
+    } catch (err) {
+      console.error('Failed to claim xp reward', err)
     }
   }
 
@@ -181,9 +266,16 @@ export default function Home() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
               <input
                 type="text"
+                value={searchQuery}
+                onChange={handleSearchChange}
                 placeholder="Search domains..."
                 className="w-full bg-slate-800/80 border border-slate-600/50 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-200 hover:bg-slate-700/80"
               />
+              {searchQuery && (
+                <button onClick={clearSearch} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -202,10 +294,10 @@ export default function Home() {
                 <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-xs rounded-full w-4 h-4 flex items-center justify-center shadow-lg animate-pulse">{unreadChatCount}</span>
               )}
             </button>
-            <button onClick={()=>navigate('/notifications')} className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200">
+            <button onClick={() => navigate('/notifications')} className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200">
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-xs rounded-full w-4 h-4 flex items-center justify-center shadow-lg animate-pulse">{unreadCount}</span>
+                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-xs rounded-full w-4 h-4 flex items-center justify-center shadow-lg animate-pulse">{unreadCount}</span>
               )}
             </button>
             <button onClick={handleProfile} className="hover:bg-slate-800 rounded-lg p-1 transition-all duration-200">
@@ -234,13 +326,19 @@ export default function Home() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
             <input
               type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
               placeholder="Search domains..."
               className="w-full bg-slate-800/80 border border-slate-600/50 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-200"
             />
+            {searchQuery && (
+              <button onClick={clearSearch} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white">
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
       </nav>
-
       {/* Level Bar Section */}
       <div className="px-4 md:px-6 py-4 mx-6 mt-6 bg-gradient-to-r from-slate-800/80 via-slate-700/60 to-slate-800/80 border border-slate-600/30 rounded-2xl shadow-2xl backdrop-blur-sm">
         <div className="flex items-center space-x-2 md:space-x-4">
@@ -312,114 +410,151 @@ export default function Home() {
                 </div>
               </div>
 
+              {/* Search Results Info */}
+              {(searchQuery || activeFilter !== "All") && (
+                <div className="mb-6 p-4 bg-slate-800/50 rounded-lg border border-slate-600/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <span className="text-slate-300">
+                        {isLoading ? "Searching..." : `Found ${filteredChallenges.length} challenge${filteredChallenges.length !== 1 ? 's' : ''}`}
+                      </span>
+                      {searchQuery && (
+                        <span className="text-sm text-slate-400">
+                          for "{searchQuery}"
+                        </span>
+                      )}
+                      {activeFilter !== "All" && (
+                        <span className="text-sm bg-slate-700 px-2 py-1 rounded-full">
+                          {activeFilter}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      onClick={clearSearch}
+                      className="text-sm text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                    >
+                      Clear filters
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Filter Tags */}
               <div className="flex flex-wrap gap-3 mb-8">
-                {["All", "JavaScript", "Python", "Algorithm", "Network", "Database", "Shell"].map((tag, index) => (
+                {filterTags.map((tag, index) => (
                   <button
                     key={tag}
-                    className={`px-4 md:px-6 py-2.5 rounded-full text-sm md:text-base font-medium transition-all duration-200 ${index === 0
+                    onClick={() => handleFilterChange(tag)}
+                    className={`px-4 md:px-6 py-2.5 rounded-full text-sm md:text-base font-medium transition-all duration-200 ${activeFilter === tag
                       ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/25 transform scale-105"
                       : "bg-slate-700/80 text-slate-300 hover:bg-slate-600/80 hover:text-white hover:shadow-lg hover:scale-105 border border-slate-600/50"
                       }`}
                   >
-                    {tag}
+                    {tag === "All" ? "All" : tag.charAt(0).toUpperCase() + tag.slice(1)}
                   </button>
                 ))}
               </div>
 
-              {/* Available Challenges */}
-              <div>
-                <h3 className="text-2xl md:text-3xl font-bold mb-6 bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
-                  Available Challenges
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {challenges.map((challenge, index) => (
-                    <div
-                      key={index}
-                      className="relative group bg-gradient-to-br from-slate-800/90 to-slate-700/80 rounded-xl p-6 border border-slate-600/30 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:border-slate-500/50 backdrop-blur-sm"
-                    >
-
-
-
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-2">
-                          <span
-                            className={`text-xs px-3 py-1.5 rounded-full font-semibold shadow-md ${challenge.difficulty === "easy"
-                              ? "bg-gradient-to-r from-teal-600 to-teal-700"
-                              : challenge.difficulty === "medium"
-                                ? "bg-gradient-to-r from-yellow-600 to-orange-600"
-                                : "bg-gradient-to-r from-red-600 to-red-700"
-                              }`}
-                          >
-                            {challenge.difficulty?.toUpperCase()}
+              {filteredChallenges.length === 0 ? (
+                <div>
+                  <h3 className="text-2xl md:text-3xl font-bold mb-6 bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+                    No Challenges Available
+                  </h3>
+                </div>
+              ) : (
+                <div>
+                  <h3 className="text-2xl md:text-3xl font-bold mb-6 bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+                    Available Challenges
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredChallenges.map((challenge, index) => (
+                      <div
+                        key={index}
+                        className="relative group bg-gradient-to-br from-slate-800/90 to-slate-700/80 rounded-xl p-6 border border-slate-600/30 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:border-slate-500/50 backdrop-blur-sm"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-2">
+                            <span
+                              className={`text-xs px-3 py-1.5 rounded-full font-semibold shadow-md ${challenge.difficulty === "easy"
+                                ? "bg-gradient-to-r from-teal-600 to-teal-700"
+                                : challenge.difficulty === "medium"
+                                  ? "bg-gradient-to-r from-yellow-600 to-orange-600"
+                                  : "bg-gradient-to-r from-red-600 to-red-700"
+                                }`}
+                            >
+                              {challenge.difficulty?.toUpperCase()}
+                            </span>
+                          </div>
+                          <span className="text-xs text-slate-400 bg-slate-700/50 px-2 py-1 mt-3 rounded-lg">
+                            {challenge.time_limit} Minutes
                           </span>
                         </div>
-                        <span className="text-xs text-slate-400 bg-slate-700/50 px-2 py-1 mt-3 rounded-lg">
-                          {challenge.time_limit} Minutes
-                        </span>
-                      </div>
 
-                      <h4 className="font-bold mb-3 text-lg text-white group-hover:text-blue-300 transition-colors duration-200">
-                        {challenge.title}
-                      </h4>
+                        <h4 className="font-bold mb-3 text-lg text-white group-hover:text-blue-300 transition-colors duration-200">
+                          {challenge.title}
+                        </h4>
 
-                      {/* {challenge.is_completed && (
+                        {/* {challenge.is_completed && (
                         <div className="inline-block mb-3 px-3 py-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs rounded-full font-medium shadow-md">
                           Completed
                         </div>
                       )} */}
-                      {challenge.is_completed && (
-                        <div className="absolute -top-2 -right-2 px-3 py-1 bg-gray-700 text-green-400 text-xs rounded-full font-medium shadow-md z-10 flex items-center space-x-1.5 border border-gray-600">
-                          <span className="text-white">Solved</span>
-                          <div className="flex items-center justify-center w-4 h-4  rounded-full">
-                            <CircleCheck className="w-5 h-3.5 text-green" strokeWidth={3} />
+                        {challenge.is_completed && (
+                          <div className="absolute -top-2 -right-2 px-3 py-1 bg-gray-700 text-green-400 text-xs rounded-full font-medium shadow-md z-10 flex items-center space-x-1.5 border border-gray-600">
+                            <span className="text-white">Solved</span>
+                            <div className="flex items-center justify-center w-4 h-4  rounded-full">
+                              <CircleCheck className="w-5 h-3.5 text-green" strokeWidth={3} />
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
-                      <p className="text-sm text-slate-400 mb-4 line-clamp-2 leading-relaxed truncate overflow-hidden whitespace-nowrap">
-                        {challenge.description}
-                      </p>
+                        <p className="text-sm text-slate-400 mb-4 line-clamp-2 leading-relaxed truncate overflow-hidden whitespace-nowrap">
+                          {challenge.description}
+                        </p>
 
-                      <div className="flex items-center justify-between text-sm text-slate-400 mb-6">
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center justify-between text-sm text-slate-400 mb-6">
+                          <div className="flex items-center space-x-4">
+                            <div className="flex items-center space-x-2">
+                              <Users className="w-4 h-4" />
+                              <span>{challenge.completed_users}</span>
+                            </div>
+                          </div>
                           <div className="flex items-center space-x-2">
-                            <Users className="w-4 h-4" />
-                            <span>{challenge.completed_users}</span>
+                            <span className="font-medium">{challenge.success_rate}%</span>
+                            <div className="w-12 h-2 bg-slate-700 rounded-full overflow-hidden">
+                              <div
+                                className="h-2 bg-gradient-to-r from-green-500 to-green-600 rounded-full transition-all duration-500"
+                                style={{ width: `${challenge.success_rate}%` }}
+                              ></div>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium">{challenge.success_rate}%</span>
-                          <div className="w-12 h-2 bg-slate-700 rounded-full overflow-hidden">
-                            <div
-                              className="h-2 bg-gradient-to-r from-green-500 to-green-600 rounded-full transition-all duration-500"
-                              style={{ width: `${challenge.success_rate}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      </div>
 
-                      <button
-                        onClick={() => {
-                          if (challenge.is_premium && !isPremium) {
-                            navigate('/premium')
-                          } else {
-                            navigate(`/challenge/${challenge.id}`)
-                          }
-                        }}
-                        className={`group/btn w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg ${challenge.is_premium
-                          ? "bg-gradient-to-r from-orange-600 via-orange-700 to-red-600 hover:from-orange-500 hover:via-orange-600 hover:to-red-500 hover:shadow-orange-500/25"
-                          : "bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 hover:from-blue-500 hover:via-blue-600 hover:to-cyan-500 hover:shadow-blue-500/25"
-                          }`}
-                      >
-                        <Code className="w-4 h-4 group-hover/btn:rotate-12 transition-transform duration-200" />
-                        <span>{challenge.is_premium ? "Premium Domain" : "Enter Domain"}</span>
-                        <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-200" />
-                      </button>
-                    </div>
-                  ))}
+                        <button
+                          onClick={() => {
+                            if (challenge.is_premium && !isPremium) {
+                              navigate('/premium')
+                            } else {
+                              navigate(`/challenge/${challenge.id}`)
+                            }
+                          }}
+                          className={`group/btn w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg ${challenge.is_premium
+                            ? "bg-gradient-to-r from-orange-600 via-orange-700 to-red-600 hover:from-orange-500 hover:via-orange-600 hover:to-red-500 hover:shadow-orange-500/25"
+                            : "bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 hover:from-blue-500 hover:via-blue-600 hover:to-cyan-500 hover:shadow-blue-500/25"
+                            }`}
+                        >
+                          <Code className="w-4 h-4 group-hover/btn:rotate-12 transition-transform duration-200" />
+                          <span>{challenge.is_premium ? "Premium Domain" : "Enter Domain"}</span>
+                          <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-200" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Available Challenges */}
+
 
               {/* Premium Features */}
               <div className="bg-gradient-to-br from-slate-800/90 via-purple-900/20 to-slate-800/90 rounded-2xl p-8 mt-12 border border-slate-600/30 shadow-2xl backdrop-blur-sm relative overflow-hidden">
@@ -499,11 +634,11 @@ export default function Home() {
         </main>
       </div>
       <GiftReceivedModal
-        isOpen={showGiftModal} 
-        onClose={()=>setShowGiftModal(false)}
-         day={giftDay} 
-         xpAmount={xpAmount}
-          onUseGift={handleUseGift}
+        isOpen={showGiftModal}
+        onClose={() => setShowGiftModal(false)}
+        day={giftDay}
+        xpAmount={xpAmount}
+        onUseGift={handleUseGift}
       />
     </div>
   )

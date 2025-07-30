@@ -1,6 +1,6 @@
 import axiosInstance from "@/api/axiosInstance"
 import { useEffect, useState } from "react"
-import { X, Code, TestTube, Settings, Languages, Lightbulb, Clock } from "lucide-react"
+import { X, Code, TestTube, Settings, Languages, Lightbulb, Clock, Tag, Plus } from "lucide-react"
 
 function CreateChallengeModal({ isOpen, onClose, onSuccess,isEdit,challengeId,initialData }) {
   const [form, setForm] = useState({
@@ -26,6 +26,15 @@ function CreateChallengeModal({ isOpen, onClose, onSuccess,isEdit,challengeId,in
 
   const [message, setMessage] = useState("")
   const [activeSection, setActiveSection] = useState("basic")
+  const [newTag, setNewTag] = useState("")
+
+  // Predefined common tags for suggestions
+  const commonTags = [
+    "Array", "String", "Dynamic Programming", "Recursion", "Sorting", 
+    "Binary Search", "Hash Table", "Linked List", "Tree", "Graph",
+    "Mathematics", "Greedy", "Backtracking", "Two Pointers", "Stack",
+    "Queue", "Heap", "Bit Manipulation", "Database", "System Design"
+  ]
 
   useEffect(()=>{
     if(isEdit && initialData){
@@ -55,6 +64,20 @@ function CreateChallengeModal({ isOpen, onClose, onSuccess,isEdit,challengeId,in
     const updated = [...form.test_cases]
     updated[index][key] = value
     setForm({ ...form, test_cases: updated })
+  }
+
+  const addTag = (tagToAdd = null) => {
+    const tag = tagToAdd || newTag.trim()
+    if (tag && !form.tags.includes(tag)) {
+      setForm({ ...form, tags: [...form.tags, tag] })
+      setNewTag("")
+    }
+  }
+
+  const removeTag = (index) => {
+    const updated = [...form.tags]
+    updated.splice(index, 1)
+    setForm({ ...form, tags: updated })
   }
 
   const addTestCase = () => {
@@ -162,6 +185,7 @@ function CreateChallengeModal({ isOpen, onClose, onSuccess,isEdit,challengeId,in
 
   const sections = [
     { id: "basic", label: "Basic Info", icon: Settings },
+    { id: "tags", label: "Tags", icon: Tag },
     { id: "languages", label: "Languages", icon: Languages },
     { id: "code", label: "Code Templates", icon: Code },
     { id: "tests", label: "Test Cases", icon: TestTube },
@@ -329,6 +353,99 @@ function CreateChallengeModal({ isOpen, onClose, onSuccess,isEdit,challengeId,in
                           Active
                         </label>
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeSection === "tags" && (
+                  <div className="space-y-6">
+                    <div className="bg-white border border-gray-200 rounded-xl p-6">
+                      <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                        <Tag size={24} />
+                        Challenge Tags
+                      </h3>
+                      <p className="text-gray-600 mb-6">
+                        Add tags to help categorize and make your challenge more discoverable. 
+                        Tags help users filter and find relevant challenges.
+                      </p>
+
+                      {/* Add New Tag */}
+                      <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Add New Tag</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={newTag}
+                            onChange={(e) => setNewTag(e.target.value)}
+                            placeholder="Enter a tag name..."
+                            className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => addTag()}
+                            disabled={!newTag.trim() || form.tags.includes(newTag.trim())}
+                            className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2"
+                          >
+                            <Plus size={16} />
+                            Add
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Current Tags */}
+                      {form.tags.length > 0 && (
+                        <div className="mb-6">
+                          <label className="block text-sm font-medium text-gray-700 mb-3">Current Tags</label>
+                          <div className="flex flex-wrap gap-2">
+                            {form.tags.map((tag, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full text-sm font-medium border border-blue-200"
+                              >
+                                <Tag size={14} />
+                                {tag}
+                                <button
+                                  type="button"
+                                  onClick={() => removeTag(index)}
+                                  className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Common Tags Suggestions */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                          Suggested Tags (click to add)
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {commonTags
+                            .filter(tag => !form.tags.includes(tag))
+                            .map((tag) => (
+                              <button
+                                key={tag}
+                                type="button"
+                                onClick={() => addTag(tag)}
+                                className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm font-medium border border-gray-200 hover:bg-gray-200 hover:border-gray-300 transition-colors flex items-center gap-1"
+                              >
+                                <Plus size={12} />
+                                {tag}
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+
+                      {form.tags.length === 0 && (
+                        <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
+                          <Tag size={48} className="mx-auto mb-4 text-gray-300" />
+                          <p className="text-lg font-medium mb-2">No tags added yet</p>
+                          <p className="text-sm">Add some tags to make your challenge more discoverable</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

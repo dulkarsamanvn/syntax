@@ -17,25 +17,41 @@ function EditProfile() {
     const [formData, setFormData] = useState({
         username: '',
         profile_photo: null,
-        profile_photo_url: ''
-    })
+        profile_photo_url: '',
+        email: '',
+        tagline: '',
+        bio: '',
+        github_url: 'https://github.com/',
+        twitter_url: 'https://twitter.com/',
+        discord: 'https://discord.com/'
+        })
 
     const [message, setMessage] = useState('')
 
     useEffect(() => {
-        axiosInstance.get('/profile/', { withCredentials: true })
-            .then(res => {
-                setFormData(prev => ({
+        const fetchProfile=async()=>{
+            try{
+                const [profileRes,profileDetailsRes]=await Promise.all([
+                    axiosInstance.get('/profile/',{withCredentials:true}),
+                    axiosInstance.get('/profile/profile-details/',{withCredentials:true})
+                ])
+                setFormData(prev=>({
                     ...prev,
-                    username: res.data.username,
-                    email: res.data.email,
-                    profile_photo_url: res.data.profile_photo_url || "/placeholder.svg?height=96&width=96"
-
+                    username: profileRes.data.username,
+                    email: profileRes.data.email,
+                    profile_photo_url: profileRes.data.profile_photo_url || "/placeholder.svg?height=96&width=96",
+                    tagline: profileDetailsRes.data.tagline || '',
+                    bio: profileDetailsRes.data.bio || '',
+                    github_url: profileDetailsRes.data.github_url || 'https://github.com/',
+                    twitter_url: profileDetailsRes.data.twitter_url || 'https://twitter.com/',
+                    discord: profileDetailsRes.data.discord || 'https://discord.com/'
                 }))
-            })
-            .catch(err => {
-                console.error("Failed to fetch profile", err)
-            })
+            }catch(err){
+                console.error('Failed to fetch profile',err)
+            }
+        }
+
+        fetchProfile()
     }, [])
 
 
@@ -56,12 +72,20 @@ function EditProfile() {
             form.append('profile_photo', formData.profile_photo)
         }
         try {
-            const res = await axiosInstance.patch('/profile/', form, {
+            await axiosInstance.patch('/profile/', form, {
                 withCredentials: true,
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             })
+
+            await axiosInstance.patch('/profile/profile-details/',{
+                tagline: formData.tagline,
+                bio: formData.bio,
+                github_url: formData.github_url,
+                twitter_url: formData.twitter_url,
+                discord: formData.discord
+            },{withCredentials:true})
             setMessage('profile Updated Successfully')
             navigate('/profile', { state: { refresh: true } })
         } catch (error) {
@@ -149,7 +173,9 @@ function EditProfile() {
                                 </Label>
                                 <Input
                                     id="tagline"
-                                    defaultValue="Expert code explorer, puzzle solver"
+                                    name="tagline"
+                                    value={formData.tagline}
+                                    onChange={handleChange}
                                     className="bg-slate-700/50 border-slate-600 text-white placeholder-gray-400 focus:border-blue-500"
                                 />
                             </div>
@@ -174,7 +200,9 @@ function EditProfile() {
                                 </Label>
                                 <Textarea
                                     id="bio"
-                                    defaultValue="Passionate developer specialized in dsa challenges and simulation puzzles. I've been breaking codes for over 5 years and love helping others unlock their potential."
+                                    name='bio'
+                                    value={formData.bio}
+                                    onChange={handleChange}
                                     className="bg-slate-700/50 border-slate-600 text-white placeholder-gray-400 focus:border-blue-500 min-h-[120px] resize-none"
                                 />
                             </div>
@@ -194,7 +222,9 @@ function EditProfile() {
                                         GitHub
                                     </Label>
                                     <Input
-                                        defaultValue="github.com/dulkar_saman"
+                                        value={formData.github_url}
+                                        onChange={handleChange}
+                                        name='github_url'
                                         className="bg-slate-700/50 border-slate-600 text-white placeholder-gray-400 focus:border-blue-500"
                                     />
                                 </div>
@@ -205,7 +235,9 @@ function EditProfile() {
                                         Twitter/X
                                     </Label>
                                     <Input
-                                        defaultValue="twitter.com/dulkar_saman"
+                                        value={formData.twitter_url}
+                                        onChange={handleChange}
+                                        name='twitter_url'
                                         className="bg-slate-700/50 border-slate-600 text-white placeholder-gray-400 focus:border-blue-500"
                                     />
                                 </div>
@@ -216,51 +248,10 @@ function EditProfile() {
                                         Discord
                                     </Label>
                                     <Input
-                                        defaultValue="saman4248"
+                                        value={formData.discord}
+                                        onChange={handleChange}
+                                        name='discord'
                                         className="bg-slate-700/50 border-slate-600 text-white placeholder-gray-400 focus:border-blue-500"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Profile Settings */}
-                        <div className="bg-slate-800/50 rounded-xl p-6 space-y-6">
-                            <h2 className="text-xl font-semibold text-white">Profile Settings</h2>
-
-                            <div className="space-y-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h3 className="text-white font-medium">Email Notifications</h3>
-                                        <p className="text-sm text-gray-400">Receive notifications about challenges and messages</p>
-                                    </div>
-                                    <Switch
-                                        checked={emailNotifications}
-                                        onCheckedChange={setEmailNotifications}
-                                        className="data-[state=checked]:bg-blue-600"
-                                    />
-                                </div>
-
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h3 className="text-white font-medium">Public Profile</h3>
-                                        <p className="text-sm text-gray-400">Make your profile visible to other users</p>
-                                    </div>
-                                    <Switch
-                                        checked={publicProfile}
-                                        onCheckedChange={setPublicProfile}
-                                        className="data-[state=checked]:bg-blue-600"
-                                    />
-                                </div>
-
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h3 className="text-white font-medium">Show Activity</h3>
-                                        <p className="text-sm text-gray-400">Display your recent domain completions and badges</p>
-                                    </div>
-                                    <Switch
-                                        checked={showActivity}
-                                        onCheckedChange={setShowActivity}
-                                        className="data-[state=checked]:bg-blue-600"
                                     />
                                 </div>
                             </div>
