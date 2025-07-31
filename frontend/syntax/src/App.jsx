@@ -37,6 +37,7 @@ import GroupManagement from './Pages/Admin/GroupManagement'
 import Notifications from './Pages/User/Notifications'
 import AnalyticsDashboard from './Pages/Admin/AnalyticsDashboard'
 import BadgeManagement from './Pages/Admin/Badge/BadgeManagement'
+import LandingPage from './Pages/User/LandingPage'
 
 function App() {
   return (
@@ -188,6 +189,8 @@ function App() {
           <AdminProtectedRoute>
             <BadgeManagement />
           </AdminProtectedRoute>} />
+        
+        <Route path='' element={<LandingPage />} />
 
       </Routes>
     </Router>

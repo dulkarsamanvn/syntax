@@ -2,7 +2,7 @@ import axiosInstance from "@/api/axiosInstance"
 import AdminSideBar from "@/Components/AdminSideBar"
 import { useEffect, useState } from "react"
 import CreateChallengeModal from "./CreateChallengeModal"
-import { Plus, Search, Eye, Edit, Trash2, Crown, Clock, Trophy, Activity, Ban, CheckCircle,ChevronLeft, ChevronRight } from "lucide-react"
+import { Plus, Search, Eye, Edit, Trash2, Crown, Clock, Trophy, Activity, Ban, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react"
 import ConfirmModal from "@/Components/ConfirmModal"
 import Spinner from "@/Components/Spinner"
 
@@ -14,23 +14,23 @@ function ChallengeList() {
   const [filterDifficulty, setFilterDifficulty] = useState("all")
   const [filterStatus, setFilterStatus] = useState("all")
   const [message, setMessage] = useState("")
-  const [selectedChallenge,setSelectedChallenge]=useState(null)
-  const [blockModal,setBlockModal]=useState(false)
+  const [selectedChallenge, setSelectedChallenge] = useState(null)
+  const [blockModal, setBlockModal] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [count, setCount] = useState(0)
 
 
-  const CHALLENGES_PER_PAGE=4
+  const CHALLENGES_PER_PAGE = 4
   const totalPages = Math.ceil(count / CHALLENGES_PER_PAGE)
 
   const fetchChallenges = async () => {
     try {
       setLoading(true)
-      const params={
-        page:currentPage,
-        page_size:CHALLENGES_PER_PAGE
+      const params = {
+        page: currentPage,
+        page_size: CHALLENGES_PER_PAGE
       }
-      const res = await axiosInstance.get("/challenge/list/",{params})
+      const res = await axiosInstance.get("/challenge/list/", { params })
       setChallenges(res.data.results || [])
       setCount(res.data.count || 0)
     } catch (error) {
@@ -77,18 +77,18 @@ function ChallengeList() {
     }
   }
 
-  const openModal=(challenge)=>{
+  const openModal = (challenge) => {
     setSelectedChallenge(challenge)
     setBlockModal(true)
   }
 
   const handleToggleStatus = async () => {
-    if(!selectedChallenge){
+    if (!selectedChallenge) {
       return
     }
 
-    const challengeId=selectedChallenge.id
-    const currentStatus=selectedChallenge.is_active
+    const challengeId = selectedChallenge.id
+    const currentStatus = selectedChallenge.is_active
     try {
       const response = await axiosInstance.patch(`/challenge/${challengeId}/block/`, {
         is_active: !currentStatus,
@@ -137,11 +137,10 @@ function ChallengeList() {
         <button
           key={i}
           onClick={() => setCurrentPage(i)}
-          className={`px-3 py-2 rounded-lg ${
-            currentPage === i
+          className={`px-3 py-2 rounded-lg ${currentPage === i
               ? "bg-blue-600 text-white"
               : "text-slate-400 hover:text-white hover:bg-slate-700"
-          }`}
+            }`}
         >
           {i}
         </button>,
@@ -184,14 +183,14 @@ function ChallengeList() {
     return buttons
   }
 
-  
+
 
   return (
     <div className="flex min-h-screen bg-slate-900">
       <AdminSideBar />
 
       <div className="flex-1 p-6 lg:p-8">
-        
+
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
@@ -207,7 +206,7 @@ function ChallengeList() {
             </button>
           </div>
 
-         
+
           <div className="flex flex-col lg:flex-row gap-4 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
@@ -220,7 +219,7 @@ function ChallengeList() {
               />
             </div>
 
-            
+
             <div className="flex gap-3">
               <select
                 value={filterDifficulty}
@@ -246,10 +245,10 @@ function ChallengeList() {
           </div>
         </div>
 
-       
+
         <div className="bg-slate-800 border border-slate-700 rounded-xl shadow-xl overflow-hidden">
           {loading ? (
-            <Spinner/>
+            <Spinner />
           ) : filteredChallenges.length === 0 ? (
             <div className="text-center py-12">
               <Activity className="mx-auto text-slate-600 mb-4" size={48} />
@@ -291,9 +290,8 @@ function ChallengeList() {
                   {filteredChallenges.map((challenge, index) => (
                     <tr
                       key={challenge.id}
-                      className={`border-b border-slate-700 hover:bg-slate-700/30 transition-colors ${
-                        index % 2 === 0 ? "bg-slate-800/50" : "bg-slate-800/20"
-                      }`}
+                      className={`border-b border-slate-700 hover:bg-slate-700/30 transition-colors ${index % 2 === 0 ? "bg-slate-800/50" : "bg-slate-800/20"
+                        }`}
                     >
                       <td className="px-6 py-4">
                         <div>
@@ -338,16 +336,14 @@ function ChallengeList() {
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                            challenge.is_active
+                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${challenge.is_active
                               ? "bg-green-100 text-green-800 border border-green-200"
                               : "bg-gray-100 text-gray-800 border border-gray-200"
-                          }`}
+                            }`}
                         >
                           <div
-                            className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                              challenge.is_active ? "bg-green-500" : "bg-gray-500"
-                            }`}
+                            className={`w-1.5 h-1.5 rounded-full mr-1.5 ${challenge.is_active ? "bg-green-500" : "bg-gray-500"
+                              }`}
                           />
                           {challenge.is_active ? "Active" : "Inactive"}
                         </span>
@@ -355,7 +351,7 @@ function ChallengeList() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={()=>{
+                            onClick={() => {
                               setSelectedChallenge(challenge)
                               setIsModalOpen(true)
                             }}
@@ -366,16 +362,15 @@ function ChallengeList() {
                           </button>
                           <button
                             onClick={() => openModal(challenge)}
-                            className={`p-2 rounded-lg transition-colors ${
-                              challenge.is_active
+                            className={`p-2 rounded-lg transition-colors ${challenge.is_active
                                 ? "text-slate-400 hover:text-red-400 hover:bg-slate-700"
                                 : "text-slate-400 hover:text-green-400 hover:bg-slate-700"
-                            }`}
+                              }`}
                             title={challenge.is_active ? "Block Challenge" : "Activate Challenge"}
                           >
                             {challenge.is_active ? <Ban size={16} /> : <CheckCircle size={16} />}
                           </button>
-                          
+
                         </div>
                       </td>
                     </tr>
@@ -386,10 +381,10 @@ function ChallengeList() {
           )}
         </div>
         {totalPages > 1 && (
-        <div className="flex justify-center mt-8 gap-1">
-          {renderPagination()}
-        </div>
-      )}
+          <div className="flex justify-center mt-8 gap-1">
+            {renderPagination()}
+          </div>
+        )}
 
         {/* Results count
         {!loading && filteredChallenges.length > 0 && (
@@ -401,11 +396,10 @@ function ChallengeList() {
         {/* Success Message */}
         {message && (
           <div
-            className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
-              message.includes("successfully") || message.includes("activated") || message.includes("deactivated")
+            className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${message.includes("successfully") || message.includes("activated") || message.includes("deactivated")
                 ? "bg-green-100 border border-green-400 text-green-700"
                 : "bg-red-100 border border-red-400 text-red-700"
-            }`}
+              }`}
           >
             {message}
           </div>
@@ -413,26 +407,26 @@ function ChallengeList() {
       </div>
 
       {isModalOpen && (
-        <CreateChallengeModal 
-        isOpen={isModalOpen} 
-        onClose={() =>{
-          setIsModalOpen(false)
-          setSelectedChallenge(null)  
-        } } 
-        onSuccess={fetchChallenges} 
-        isEdit={Boolean(selectedChallenge)}
-        challengeId={selectedChallenge?.id}
-        initialData={selectedChallenge}
+        <CreateChallengeModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false)
+            setSelectedChallenge(null)
+          }}
+          onSuccess={fetchChallenges}
+          isEdit={Boolean(selectedChallenge)}
+          challengeId={selectedChallenge?.id}
+          initialData={selectedChallenge}
         />
       )}
 
       <ConfirmModal
-      show={blockModal}
-      onClose={()=>setBlockModal(false)}
-      onConfirm={handleToggleStatus}
-      actionText={`Are you sure you want to ${selectedChallenge?.is_active ? "block" : "unblock"} this challenge?`}
+        show={blockModal}
+        onClose={() => setBlockModal(false)}
+        onConfirm={handleToggleStatus}
+        actionText={`Are you sure you want to ${selectedChallenge?.is_active ? "block" : "unblock"} this challenge?`}
       />
-      
+
     </div>
   )
 }

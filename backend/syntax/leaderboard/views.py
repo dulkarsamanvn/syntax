@@ -29,7 +29,7 @@ class LeaderboardPagination(PageNumberPagination):
 class LeaderBoardView(APIView):
     permission_classes=[IsAuthenticated]
     def get(self,request):
-        search_query=request.query_params.get('search','').strip()
+        search_query=request.GET.get('search','').strip()
         users=User.objects.exclude(is_staff=True)
         if search_query:
             users=users.filter(Q(username__icontains=search_query))
@@ -83,9 +83,24 @@ class UserReportListView(APIView):
     permission_classes=[IsAuthenticated]
 
     def get(self,request):
+        search=request.GET.get('search','')
+        page=int(request.GET.get('page',1))
+        page_size=int(request.GET.get('page_size',10))
         reports=UserReport.objects.all().order_by('-created_at')
-        serializer=ReportSerializer(reports,many=True)
-        return Response(serializer.data)
+        if search:
+            reports = reports.filter(
+                Q(reported_by__username__icontains=search) |
+                Q(reported_user__username__icontains=search)
+            )
+        paginator=Paginator(reports,page_size)
+        page_obj=paginator.get_page(page)
+        paginated_reports=page_obj.object_list
+        total_count=paginator.count
+        serializer=ReportSerializer(paginated_reports,many=True)
+        return Response({
+            'results':serializer.data,
+            'count':total_count
+        })
 
 
 

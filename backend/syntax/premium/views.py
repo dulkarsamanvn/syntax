@@ -195,3 +195,22 @@ class MembershipHistoryView(APIView):
         } for s in history]
 
         return Response(data)
+
+
+class PremiumPlanBlockView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def patch(self,request,id):
+        if not (request.user.is_superuser or request.user.is_staff):
+            return Response({'detail': 'You do not have permission to perform this action.'},status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            plan=PremiumPlan.objects.get(id=id)
+        except PremiumPlan.DoesNotExist:
+            return Response({'error':'Plan not found'},status=status.HTTP_404_NOT_FOUND)
+        is_active=request.data.get('is_active')
+
+        plan.is_active=is_active
+        plan.save()
+        return Response({'message':'Plan updated successfully'},status=status.HTTP_200_OK)
+

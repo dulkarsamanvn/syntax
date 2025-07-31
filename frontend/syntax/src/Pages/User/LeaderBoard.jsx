@@ -4,10 +4,10 @@ import { Award, MessageSquare, Bell, Search, Trophy, Medal, Crown, Zap, Flame, C
 import { useNavigate } from 'react-router-dom'
 import Spinner from '@/Components/Spinner'
 import ReportModal from '@/Components/ReportModal'
+import {useDebounce} from 'use-debounce'
 
 function LeaderBoard() {
     const [users, setUsers] = useState([])
-    const [searchTerm, setSearchTerm] = useState('')
     const [filteredUsers, setFilteredUsers] = useState([])
     const [loading, setLoading] = useState(false)
     const [currentPage, setCurrentPage] = useState(1)
@@ -17,6 +17,8 @@ function LeaderBoard() {
     const [showModal, setShowModal] = useState(null)
     const [currentUserId, setCurrentUserId] = useState(null)
     const [showReportModal, setShowReportModal] = useState(false)
+    const [searchTerm, setSearchTerm] = useState('')
+    const [debouncedSearchTerm]=useDebounce(searchTerm,500)
     const navigate = useNavigate()
 
     const USERS_PER_PAGE = 10
@@ -29,7 +31,7 @@ function LeaderBoard() {
                     params: {
                         page: currentPage,
                         page_size: USERS_PER_PAGE,
-                        search: searchTerm
+                        search: debouncedSearchTerm
                     }
                 })
                 setTopUsers(res.data.top_users)
@@ -47,13 +49,13 @@ function LeaderBoard() {
         }
 
         fetchLeaderboard()
-    }, [currentPage, searchTerm])
+    }, [currentPage, debouncedSearchTerm])
 
     const total_pages = Math.ceil(count / USERS_PER_PAGE)
 
     useEffect(() => {
         setCurrentPage(1)
-    }, [searchTerm])
+    }, [debouncedSearchTerm])
 
 
     const getRankIcon = (index) => {

@@ -2,7 +2,7 @@ import axiosInstance from "@/api/axiosInstance"
 import AdminSideBar from "@/Components/AdminSideBar"
 import Spinner from "@/Components/Spinner"
 import { useEffect, useState } from "react"
-import { Search, AlertTriangle, User, FileText, Shield, CheckCircle, Clock, Ban } from "lucide-react"
+import { Search, AlertTriangle, User, FileText, Shield, CheckCircle, Clock, Ban, ChevronLeft, ChevronRight } from "lucide-react"
 
 function ReportManagement() {
   const [reports, setReports] = useState([])
@@ -10,13 +10,27 @@ function ReportManagement() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState("all")
   const [message, setMessage] = useState("")
+  const [count,setCount]=useState(0)
+  const [currentPage,setCurrentPage]=useState(1)
+  const [searchQuery,setSearchQuery]=useState('')
+
+  const REPORTS_PER_PAGE=5
+  const totalPages = Math.ceil(count / REPORTS_PER_PAGE)
 
   useEffect(() => {
     const fetchReports = async () => {
       try {
         setLoading(true)
-        const res = await axiosInstance.get("/leaderboard/report-list/")
-        setReports(res.data)
+        const params={
+          page:currentPage,
+          page_size:REPORTS_PER_PAGE
+        }
+        if(searchQuery){
+          params.search=searchQuery
+        }
+        const res = await axiosInstance.get("/leaderboard/report-list/",{params})
+        setReports(res.data.results || [])
+        setCount(res.data.count || 0)
       } catch (err) {
         console.error("error fetching reports", err)
       } finally {
@@ -24,7 +38,7 @@ function ReportManagement() {
       }
     }
     fetchReports()
-  }, [])
+  }, [currentPage,searchQuery])
 
   useEffect(() => {
     if (message) {
@@ -49,14 +63,10 @@ function ReportManagement() {
   }
 
   const filteredReports = reports.filter((report) => {
-    const matchesSearch =
-      report.reported_by.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      report.reported_user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      report.reason.toLowerCase().includes(searchTerm.toLowerCase())
 
     const matchesStatus = filterStatus === "all" || report.status === filterStatus
 
-    return matchesSearch && matchesStatus
+    return matchesStatus
   })
 
   const getStatusColor = (status) => {
@@ -85,6 +95,81 @@ function ReportManagement() {
     }
   }
 
+  const renderPagination = () => {
+    const buttons = []
+    const maxVisiblePages = 5
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1)
+    }
+
+    // Previous
+    buttons.push(
+      <button
+        key="prev"
+        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+        disabled={currentPage === 1}
+        className="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-50"
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </button>,
+    )
+
+    // Page Numbers
+    for (let i = startPage; i <= endPage; i++) {
+      buttons.push(
+        <button
+          key={i}
+          onClick={() => setCurrentPage(i)}
+          className={`px-3 py-2 rounded-lg ${
+            currentPage === i
+              ? "bg-blue-600 text-white"
+              : "text-slate-400 hover:text-white hover:bg-slate-700"
+          }`}
+        >
+          {i}
+        </button>,
+      )
+    }
+
+    // Ellipsis + Last Page
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        buttons.push(
+          <span key="ellipsis" className="px-3 py-2 text-slate-400">
+            ...
+          </span>,
+        )
+      }
+
+      buttons.push(
+        <button
+          key={totalPages}
+          onClick={() => setCurrentPage(totalPages)}
+          className="px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg"
+        >
+          {totalPages}
+        </button>,
+      )
+    }
+
+    // Next
+    buttons.push(
+      <button
+        key="next"
+        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+        disabled={currentPage === totalPages}
+        className="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-50"
+      >
+        <ChevronRight className="w-4 h-4" />
+      </button>,
+    )
+
+    return buttons
+  }
+
   return (
     <div className="flex min-h-screen bg-slate-900">
       <AdminSideBar />
@@ -105,8 +190,8 @@ function ReportManagement() {
               <input
                 type="text"
                 placeholder="Search reports..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -237,14 +322,11 @@ function ReportManagement() {
             </div>
           )}
         </div>
-
-        {/* Results count */}
-        {!loading && filteredReports.length > 0 && (
-          <div className="mt-4 text-slate-400 text-sm">
-            Showing {filteredReports.length} of {reports.length} reports
-          </div>
-        )}
-
+        {totalPages > 1 && (
+        <div className="flex justify-center mt-8 gap-1">
+          {renderPagination()}
+        </div>
+      )}
         {/* Success Message */}
         {message && (
           <div

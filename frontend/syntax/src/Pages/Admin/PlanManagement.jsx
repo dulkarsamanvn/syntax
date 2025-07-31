@@ -1,7 +1,9 @@
 import axiosInstance from "@/api/axiosInstance"
 import AdminSideBar from "@/Components/AdminSideBar"
-import { Plus, Edit, Ban,Calendar, DollarSign } from "lucide-react"
+import ConfirmModal from "@/Components/ConfirmModal"
+import { Plus, Edit, Ban,Calendar, DollarSign, CheckCircle } from "lucide-react"
 import { useEffect, useState } from "react"
+import toast from "react-hot-toast"
 
 function PlanManagement() {
   const [plans, setPlans] = useState([])
@@ -9,6 +11,8 @@ function PlanManagement() {
   const [editPlanData,setEditPlanData]=useState(null)
   const [showModal, setShowModal] = useState(false)
   const [message,setMessage]=useState({type:'',text:''})
+  const [blockModal,setBlockModal]=useState(false)
+  const [selectedPlan,setSelectedPlan]=useState(null)
   const [newPlan, setNewPlan] = useState({
     name: "",
     description: "",
@@ -76,9 +80,31 @@ function PlanManagement() {
     }
   }
 
-  const handleBanPlan = async (planId) => {
-    // TODO: Implement ban functionality
-    console.log("Ban plan:", planId)
+  const openModal=(plan)=>{
+    setSelectedPlan(plan)
+    setBlockModal(true)
+  }
+
+  const handleBanPlan = async () => {
+    if(!selectedPlan) return 
+
+    const planId=selectedPlan.id
+    const currentStatus=selectedPlan.is_active
+    try{
+      const res=await axiosInstance.patch(`/premium/${planId}/block/`,
+       {is_active:!currentStatus}
+      )
+      toast.success(res.data.message || `Plan ${!currentStatus ? "activated" : "deactivated"} successfully`)
+      setPlans(prevPlans=>
+        prevPlans.map((plan)=>
+          plan.id===planId ? {...plan,is_active:!currentStatus}:plan
+        )
+      )
+      setSelectedPlan(null)
+      setBlockModal(false)
+    }catch(err){
+      toast.error('failed to update group status')
+    }
   }
 
   return (
@@ -119,11 +145,12 @@ function PlanManagement() {
                       <Edit size={16} />
                     </button>
                     <button
-                      onClick={() => handleBanPlan(plan.id)}
+                      onClick={() =>openModal(plan)}
                       className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition-colors"
                       title="Ban Plan"
                     >
-                      <Ban size={16} />
+                      {plan.is_active ? <Ban size={16} /> : <CheckCircle size={16} />}
+                      
                     </button>
                   </div>
                 </div>
@@ -138,6 +165,7 @@ function PlanManagement() {
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-blue-400" />
                     <span className="text-slate-300 text-sm">{plan.duration_days} days duration</span>
+
                   </div>
                 </div>
               </div>
@@ -237,6 +265,12 @@ function PlanManagement() {
             </div>
           </div>
         )}
+        <ConfirmModal
+          show={blockModal}
+          onClose={()=>setBlockModal(false)}
+          onConfirm={handleBanPlan}
+          actionText={`Are you sure you want to ${selectedPlan?.is_active ? "block" : "unblock"} this plan?`}
+        />
     </div>
   )
 }
