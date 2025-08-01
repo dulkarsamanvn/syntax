@@ -14,7 +14,8 @@ import {
   LogOut,
   Menu,
   X,
-  AwardIcon
+  AwardIcon,
+  Sword
 } from "lucide-react"
 
 const menuItems = [
@@ -27,7 +28,7 @@ const menuItems = [
   { name: "Report Management", icon: FileText, path: "/admin/report-management" },
   { name: "Group Management", icon: UserCheck, path: "/admin/group-management" },
   { name: "Badge Management", icon: Award, path: "/admin/badge-management" },
-  // { name: "Notify Management", icon: Bell, path: "#" },
+  { name: "Challenge Requests", icon: Sword, path: "/admin/challenge-requests" },
 ]
 
 function AdminSideBar() {

@@ -68,3 +68,18 @@ class Solutions(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s solution to {self.challenge.title}"
+    
+
+class ChallengeRequest(models.Model):
+
+    STATUS_CHOICES = [('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')]   
+
+    user=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
+    title=models.CharField(max_length=255)
+    description=models.TextField()
+    difficulty=models.CharField(max_length=10)
+    language=models.CharField(max_length=20)
+    sample_input=models.TextField()
+    sample_output=models.TextField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    created_at=models.DateTimeField(auto_now_add=True)

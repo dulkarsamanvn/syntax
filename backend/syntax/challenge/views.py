@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from challenge.serializers import ChallengeSerializer,SubmissionSerializer,SubmissionListSerializer,SolutionSerializer,ChallengeCreateSerializer
+from challenge.serializers import ChallengeSerializer,SubmissionSerializer,SubmissionListSerializer,SolutionSerializer,ChallengeCreateSerializer,ChallengeRequestSerializer
 from rest_framework.response import Response
 from rest_framework import status
-from challenge.models import Challenge,Submission,Solutions
+from challenge.models import Challenge,Submission,Solutions,ChallengeRequest
 import requests
 import json,time
 from challenge.utils import format_input_args,update_user_streak
@@ -34,7 +34,8 @@ class ChallengeCreateView(APIView):
             users=User.objects.all()
             send_system_notification(
                 users,
-                f"New challenge '{challenge.title}' has been posted!"
+                f"New challenge '{challenge.title}' has been posted!",
+                link=f'/challenge/{challenge.id}/'
             )
             
             return Response({"message": "Challenge created successfully!"},status=status.HTTP_201_CREATED)
@@ -61,38 +62,6 @@ class ChallengeUpdateView(APIView):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
         
 
-# ----------------------------------------------------------------
-  
-# class ChallengeListView(APIView):
-#     permission_classes=[IsAuthenticated]
-
-#     def get(self,request):
-#         user=request.user
-#         if user.is_staff or user.is_superuser:
-#             challenges=Challenge.objects.all().order_by('-created_at')
-#         else:
-#             challenges=Challenge.objects.filter(is_active=True).order_by('-created_at')
-
-#         challenge_list=[]
-
-#         for challenge in challenges:
-#             is_completed=Submission.objects.filter(user=user,challenge=challenge,is_completed=True).exists()
-#             total_attempts=Submission.objects.filter(challenge=challenge).count()
-#             completed_users_count=Submission.objects.filter(challenge=challenge,is_completed=True).values('user').distinct().count()
-#             if total_attempts > 0:
-#                 success_rate=round((completed_users_count/total_attempts)*100,2)
-#             else:
-#                 success_rate=0.0
-#             serializer=ChallengeSerializer(challenge,context={'request':request})
-#             challenge_data=serializer.data
-#             challenge_data['is_completed']=is_completed
-#             challenge_data['success_rate']=success_rate
-#             challenge_data['completed_users']=completed_users_count
-
-#             challenge_list.append(challenge_data)
-#         return Response(challenge_list)
-
-# ----------------------------------------------------------------
 
 
 # Lists all challenges for the authenticated user.
@@ -697,3 +666,75 @@ class UserDomainStatsView(APIView):
             'medium_total':total_dict['medium'],
             'hard_total':total_dict['hard'],
         })
+
+
+class CreateChallengeRequestView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def post(self,request):
+        serializer=ChallengeRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+
+            title=serializer.validated_data['title']
+
+            send_system_notification(
+                [request.user],
+                f"Your request for challenge {title} has been submitted successfully."
+            )
+            return Response({'message':'Challenge Request Submitted Successfully'},status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChallengeRequestListView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def get(self,request):
+        user=request.user
+        is_admin=request.user.is_superuser or request.user.is_staff
+
+        search=request.GET.get('search','')
+        page=int(request.GET.get('page',1))
+        page_size=int(request.GET.get('page_size',10))
+
+        if is_admin:
+            queryset=ChallengeRequest.objects.all()
+        else:
+            queryset=ChallengeRequest.objects.filter(user=user)
+
+        if search:
+            queryset=queryset.filter(
+                Q(title__icontains=search)
+            )
+        
+        paginator=Paginator(queryset.order_by('-created_at'),page_size)
+        page_obj=paginator.get_page(page)
+        count=paginator.count
+        serializer=ChallengeRequestSerializer(page_obj,many=True)
+        return Response({
+            'results':serializer.data,
+            'count':count
+        })
+
+
+class ChallengeRequestStatusUpdateView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def patch(self,request,request_id):
+        try:
+            challenge_request=ChallengeRequest.objects.get(id=request_id)
+        except ChallengeRequest.DoesNotExist:
+            return Response({'error':'Challenge Request not found'},status=status.HTTP_404_NOT_FOUND)
+        
+        status_value=request.data.get('status')
+        if status_value:
+            challenge_request.status=status_value
+            challenge_request.save()
+
+            send_system_notification(
+                [challenge_request.user],
+                f"Your Challenge request status has been updated to {status_value}."
+            )
+
+            return Response({'message':'status updated successfully'})
+        return Response({'error':'no status provided'},status=status.HTTP_400_BAD_REQUEST)

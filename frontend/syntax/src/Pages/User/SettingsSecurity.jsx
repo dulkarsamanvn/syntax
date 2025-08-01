@@ -23,6 +23,16 @@ function SettingsSecurity() {
     const [updating, setUpdating] = useState(false)
     const navigate = useNavigate()
 
+
+    useEffect(()=>{
+        setLoading(true)
+        const timeout=setTimeout(() => {
+            setLoading(false)
+        }, 500);
+
+        return ()=>clearTimeout(timeout)
+    },[])
+
     const handleLogout = async () => {
         try {
             await axiosInstance.post("/logout/", {})
@@ -114,19 +124,19 @@ function SettingsSecurity() {
                                         <div className="bg-slate-700/70 rounded-lg border border-slate-600/50">
                                             <div className="flex items-center justify-between p-3 cursor-pointer">
                                                 <div className="flex items-center gap-3">
-                                                    <Shield className="w-4 h-4 text-white" />
+                                                    <Shield className="w-4 h-4 text-yellow-400" />
                                                     <span className="text-white font-medium">Security</span>
                                                 </div>
                                                 <ChevronDown className="w-4 h-4 text-white" />
                                             </div>
                                         </div>
                                         <div
-                                            onClick={() => navigate("/settings/notifications")}
+                                            onClick={() => navigate("/settings/requests")}
                                             className="flex items-center justify-between p-3 hover:bg-slate-700/50 rounded-lg cursor-pointer transition-all duration-200 group"
                                         >
                                             <div className="flex items-center gap-3">
                                                 <Bell className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
-                                                <span className="text-slate-300 group-hover:text-white transition-colors">Notifications</span>
+                                                <span className="text-slate-300 group-hover:text-white transition-colors">Requests</span>
                                             </div>
                                             <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
                                         </div>
@@ -135,7 +145,7 @@ function SettingsSecurity() {
                                             className="flex items-center justify-between p-3 hover:bg-slate-700/50 rounded-lg cursor-pointer transition-all duration-200 group"
                                         >
                                             <div className="flex items-center gap-3">
-                                                <Crown className="w-4 h-4 text-yellow-400 group-hover:text-yellow-300 transition-colors" />
+                                                <Crown className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors " />
                                                 <span className="text-slate-300 group-hover:text-white transition-colors">Premium</span>
                                             </div>
                                             <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />

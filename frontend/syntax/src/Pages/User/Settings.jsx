@@ -105,10 +105,12 @@ function Settings() {
                       </div>
                       <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
                     </div>
-                    <div className="flex items-center justify-between p-3 hover:bg-slate-700/50 rounded-lg cursor-pointer transition-all duration-200 group">
+                    <div 
+                    onClick={()=>navigate('/settings/requests')}
+                    className="flex items-center justify-between p-3 hover:bg-slate-700/50 rounded-lg cursor-pointer transition-all duration-200 group">
                       <div className="flex items-center gap-3">
                         <Bell className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
-                        <span className="text-slate-300 group-hover:text-white transition-colors">Notifications</span>
+                        <span className="text-slate-300 group-hover:text-white transition-colors">Requests</span>
                       </div>
                       <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
                     </div>

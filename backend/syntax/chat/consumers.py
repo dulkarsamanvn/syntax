@@ -40,6 +40,14 @@ def delete_message_by_id(message_id,sender_id):
         return False
 
 
+@sync_to_async
+def get_username(user_id):
+    try:
+        return User.objects.get(id=user_id).username
+    except User.DoesNotExist:
+        return 'someone'
+
+
 
 
 
@@ -116,12 +124,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 return
 
             if typing is not None and sender_id:
+                sender_name=await get_username(sender_id)
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
                         'type': 'typing_event',
                         'sender_id': sender_id,
                         'is_typing': typing,
+                        'sender_name':sender_name
                     }
                 )
                 return
@@ -240,6 +250,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'type': 'typing',
             'sender_id': event['sender_id'],
             'is_typing': event['is_typing'],
+            'sender_name':event['sender_name']
         }))
 
 

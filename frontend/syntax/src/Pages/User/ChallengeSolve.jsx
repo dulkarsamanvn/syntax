@@ -23,6 +23,7 @@ import {
   ArrowRight,
   Timer
 } from "lucide-react"
+import toast from "react-hot-toast"
 
 function ChallengeSolve() {
   const { id } = useParams()
@@ -159,6 +160,7 @@ function ChallengeSolve() {
           description: editingSolutionDescription,
           language: editingSolutionLanguage
         })
+        toast.success('solution updated successfully')
         setEditingSolution(null);
         setEditingSolutionDescription('');
         setEditingSolutionCode('');
@@ -169,6 +171,7 @@ function ChallengeSolve() {
           description: solutionDescription,
           language: solutionLanguage
         })
+        toast.success('solution added successfully')
         setSolutionCode('');
         setSolutionDescription('');
         setSolutionLanguage('python');
@@ -225,7 +228,7 @@ function ChallengeSolve() {
         code,
         language,
       })
-      console.log(res.data)
+      toast.success('challenge submitted successfully')
       setConsoleOutput(res.data.console_output)
       setTestResults(res.data.result_summary)
       const hasError = res.data.console_output.some((log) => log.type === "error")

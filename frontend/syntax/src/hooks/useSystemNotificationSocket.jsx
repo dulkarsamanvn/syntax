@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react'
 import toast from 'react-hot-toast'
+import { useNavigate } from 'react-router-dom'
 
 function useSystemNotificationSocket(userId,onNewNotification) {
+  const navigate=useNavigate()
 
  useEffect(()=>{
     if(!userId) return
@@ -13,9 +15,13 @@ function useSystemNotificationSocket(userId,onNewNotification) {
         // toast.success(data.message)
         toast.custom((t) => (
         <div
+          onClick={()=>{
+            if(data.link) navigate(data.link)
+            toast.dismiss(t.id)
+          }}
           className={`${
             t.visible ? 'animate-enter' : 'animate-leave'
-          } bg-gradient-to-r from-indigo-600 to-purple-700 text-white px-4 py-3 rounded-lg shadow-lg max-w-md w-full`}
+          } cursor-pointer bg-gradient-to-r from-indigo-600 to-purple-700 text-white px-4 py-3 rounded-lg shadow-lg max-w-md w-full`}
         >
           <strong className="block font-semibold">📢 Notification</strong>
           <span>{data.message}</span>
@@ -28,7 +34,7 @@ function useSystemNotificationSocket(userId,onNewNotification) {
 
     return ()=>socket.close()
 
- },[userId])   
+ },[userId,navigate,onNewNotification])   
 }
 
 export default useSystemNotificationSocket

@@ -1,0 +1,344 @@
+import axiosInstance from "@/api/axiosInstance"
+import AdminSideBar from "@/Components/AdminSideBar"
+import Spinner from "@/Components/Spinner"
+import { useEffect, useState } from "react"
+import { Search, AlertTriangle, User, FileText, Shield, CheckCircle, Clock, Ban, ChevronLeft, ChevronRight, Languages } from "lucide-react"
+
+function ChallengeRequests() {
+  const [requests, setRequests] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterStatus, setFilterStatus] = useState("all")
+  const [message, setMessage] = useState("")
+  const [count, setCount] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const REQUESTS_PER_PAGE = 5
+  const totalPages = Math.ceil(count / REQUESTS_PER_PAGE)
+
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        setLoading(true)
+        const params = {
+          page: currentPage,
+          page_size: REQUESTS_PER_PAGE
+        }
+        if (searchQuery) {
+          params.search = searchQuery
+        }
+        const res = await axiosInstance.get("/challenge/challenge-requests/", { params })
+        setRequests(res.data.results || [])
+        setCount(res.data.count || 0)
+      } catch (err) {
+        console.error("error fetching requests", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchRequests()
+  }, [currentPage, searchQuery])
+
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => {
+        setMessage("")
+      }, 1500)
+      return () => clearTimeout(timer)
+    }
+  }, [message])
+
+  const handleStatusChange = async (requestId, newStatus) => {
+    try {
+      await axiosInstance.patch(`/challenge/request-status-update/${requestId}/`, {
+        status: newStatus,
+      })
+      setRequests((prev) => prev.map((request) => (request.id === requestId ? { ...request, status: newStatus } : request)))
+      setMessage("Status updated successfully")
+    } catch (err) {
+      console.error("error updating status", err)
+      setMessage("Failed to update status")
+    }
+  }
+
+  const filteredRequests = requests.filter((req) => {
+
+    const matchesStatus = filterStatus === "all" || req.status === filterStatus
+
+    return matchesStatus
+  })
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+      case "approved":
+        return "bg-blue-100 text-blue-800 border-blue-200"
+      case "rejected":
+        return "bg-red-100 text-red-800 border-red-200"
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200"
+    }
+  }
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "pending":
+        return <Clock size={12} />
+      case "rejected":
+        return <Ban size={12} />
+      case "approved":
+        return <CheckCircle size={12} />
+      default:
+        return <Shield size={12} />
+    }
+  }
+
+  const renderPagination = () => {
+    const buttons = []
+    const maxVisiblePages = 5
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1)
+    }
+
+    // Previous
+    buttons.push(
+      <button
+        key="prev"
+        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+        disabled={currentPage === 1}
+        className="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-50"
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </button>,
+    )
+
+    // Page Numbers
+    for (let i = startPage; i <= endPage; i++) {
+      buttons.push(
+        <button
+          key={i}
+          onClick={() => setCurrentPage(i)}
+          className={`px-3 py-2 rounded-lg ${currentPage === i
+              ? "bg-blue-600 text-white"
+              : "text-slate-400 hover:text-white hover:bg-slate-700"
+            }`}
+        >
+          {i}
+        </button>,
+      )
+    }
+
+    // Ellipsis + Last Page
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        buttons.push(
+          <span key="ellipsis" className="px-3 py-2 text-slate-400">
+            ...
+          </span>,
+        )
+      }
+
+      buttons.push(
+        <button
+          key={totalPages}
+          onClick={() => setCurrentPage(totalPages)}
+          className="px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg"
+        >
+          {totalPages}
+        </button>,
+      )
+    }
+
+    // Next
+    buttons.push(
+      <button
+        key="next"
+        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+        disabled={currentPage === totalPages}
+        className="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-50"
+      >
+        <ChevronRight className="w-4 h-4" />
+      </button>,
+    )
+
+    return buttons
+  }
+
+  return (
+    <div className="flex min-h-screen bg-slate-900">
+      <AdminSideBar />
+      <div className="flex-1 p-6 lg:p-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">Request Management</h1>
+              <p className="text-slate-400">Review and manage user challenge request</p>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-col lg:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
+              <input
+                type="text"
+                placeholder="Search reports..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Reports Table */}
+        <div className="bg-slate-800 border border-slate-700 rounded-xl shadow-xl overflow-hidden">
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <Spinner />
+            </div>
+          ) : filteredRequests.length === 0 ? (
+            <div className="text-center py-12">
+              <AlertTriangle className="mx-auto text-slate-600 mb-4" size={48} />
+              <h3 className="text-lg font-medium text-slate-300 mb-2">
+                {searchTerm || filterStatus !== "all" ? "No requests match your filters" : "No requests found"}
+              </h3>
+              <p className="text-slate-500">
+                {requests.length === 0 ? "No requests have been submitted yet" : "Try adjusting your search or filters"}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-slate-700/50 border-b border-slate-600">
+                    <th className="text-left px-6 py-4 text-slate-300 font-medium">
+                      <div className="flex items-center gap-2">
+                        <User size={16} />
+                        Requested By
+                      </div>
+                    </th>
+                    <th className="text-left px-6 py-4 text-slate-300 font-medium">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle size={16} />
+                        Title
+                      </div>
+                    </th>
+                    <th className="text-left px-6 py-4 text-slate-300 font-medium">
+                      <div className="flex items-center gap-2">
+                        <FileText size={16} />
+                        Description
+                      </div>
+                    </th>
+                    <th className="text-left px-6 py-4 text-slate-300 font-medium">
+                      <div className="flex items-center gap-2">
+                        <Languages size={16} />
+                        Reported User
+                      </div>
+                    </th>
+                    <th className="text-left px-6 py-4 text-slate-300 font-medium">
+                      <div className="flex items-center gap-2">
+                        <Shield size={16} />
+                        Status
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRequests.map((request, index) => (
+                    <tr
+                      key={request.id}
+                      className={`border-b border-slate-700 hover:bg-slate-700/30 transition-colors ${index % 2 === 0 ? "bg-slate-800/50" : "bg-slate-800/20"
+                        }`}
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center">
+                            <User size={16} className="text-slate-400" />
+                          </div>
+                          <div>
+                            <span className="text-white font-medium">{request.username}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-white font-medium">
+                          {request.title}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="max-w-xs">
+                          <p className="text-slate-300 text-sm truncate" title={request.description}>
+                            {request.description}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div>
+                            <span className="text-slate-300 text-sm truncate">{request.language}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <select
+                          className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium border transition-colors focus:ring-2 focus:ring-blue-500 focus:border-transparent ${getStatusColor(request.status)}`}
+                          value={request.status}
+                          onChange={(e) => handleStatusChange(request.id, e.target.value)}
+                        >
+                          <option value="pending" disabled={request.status !== 'pending'}>Pending</option>
+                          <option value="approved" disabled={request.status !== 'pending'}>Approved</option>
+                          <option value="rejected" disabled={request.status !== 'pending'}>Rejected</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+        {totalPages > 1 && (
+          <div className="flex justify-center mt-8 gap-1">
+            {renderPagination()}
+          </div>
+        )}
+        {/* Success Message */}
+        {message && (
+          <div
+            className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${message.includes("successfully")
+                ? "bg-green-100 border border-green-400 text-green-700"
+                : "bg-red-100 border border-red-400 text-red-700"
+              }`}
+          >
+            <div className="flex items-center gap-2">
+              {message.includes("successfully") ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
+              {message}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default ChallengeRequests

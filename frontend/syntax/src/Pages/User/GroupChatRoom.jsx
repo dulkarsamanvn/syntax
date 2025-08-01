@@ -1,5 +1,3 @@
-"use client"
-
 import axiosInstance from "@/api/axiosInstance"
 import { useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
@@ -84,7 +82,7 @@ function GroupChatRoom() {
       } else {
         if (data.type === "typing") {
           if (data.sender_id !== currentUserId) {
-            setTyping(data.is_typing)
+            setTyping(data.is_typing ? data.sender_name : false)
           }
         } else if (data.type === "delete") {
           setMessages((prev) => prev.filter((msg) => msg.message_id !== data.message_id))
@@ -467,7 +465,7 @@ function GroupChatRoom() {
                             style={{ animationDelay: "0.2s" }}
                           ></div>
                         </div>
-                        <span className="text-white/60 text-sm ml-2">Someone is typing...</span>
+                        <span className="text-white/60 text-sm ml-2">{typing && `${typing} is typing...`}</span>
                       </div>
                     </div>
                   </div>

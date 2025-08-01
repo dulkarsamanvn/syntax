@@ -38,6 +38,8 @@ import Notifications from './Pages/User/Notifications'
 import AnalyticsDashboard from './Pages/Admin/AnalyticsDashboard'
 import BadgeManagement from './Pages/Admin/Badge/BadgeManagement'
 import LandingPage from './Pages/User/LandingPage'
+import SettingsRequests from './Pages/User/SettingsRequest'
+import ChallengeRequests from './Pages/Admin/ChallengeRequests'
 
 function App() {
   return (
@@ -191,6 +193,16 @@ function App() {
           </AdminProtectedRoute>} />
         
         <Route path='' element={<LandingPage />} />
+
+        <Route path='/settings/requests' element={
+          <ProtectedRoute>
+            <SettingsRequests />
+          </ProtectedRoute>} />
+        
+        <Route path='/admin/challenge-requests' element={
+          <AdminProtectedRoute>
+            <ChallengeRequests/>
+          </AdminProtectedRoute>} />
 
       </Routes>
     </Router>

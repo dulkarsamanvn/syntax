@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from challenge.models import Challenge,Submission,Solutions
+from challenge.models import Challenge,Submission,Solutions,ChallengeRequest
 
 class ChallengeSerializer(serializers.ModelSerializer):
 
@@ -51,3 +51,11 @@ class SolutionSerializer(serializers.ModelSerializer):
         model=Solutions
         fields = ['id', 'challenge', 'user', 'username', 'description', 'code', 'language', 'created_at']
         read_only_fields = ['user','challenge']
+
+
+class ChallengeRequestSerializer(serializers.ModelSerializer):
+    username=serializers.CharField(source='user.username',read_only=True)
+    class Meta:
+        model=ChallengeRequest
+        fields='__all__'
+        read_only_fields=['user','created_at']
