@@ -5,8 +5,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from badge.serializers import BadgeSerializer
 from badge.models import Badge,UserBadge
-# Create your views here.
 
+# View to create badge, only admins are allowed to create badge
+# created badge is serialized and then saved.
 class BadgeCreateView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -23,6 +24,9 @@ class BadgeCreateView(APIView):
             return Response(serializer.data,status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
+
+# view to update the badge and only admins are allowed to update.
+# specific badge id is taken to update and updated after serializing.
 class BadgeUpdateView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -41,6 +45,8 @@ class BadgeUpdateView(APIView):
             return Response({'message':'Badge updated Successfully'},status=status.HTTP_200_OK)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
+
+# view to list all the badges on admin side.
 class BadgeListView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -50,6 +56,8 @@ class BadgeListView(APIView):
         return Response(serializer.data)
 
 
+# view to block or unblock the badge.
+# here, id of that specific badge is taken to block
 class BadgeBlockView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -61,6 +69,8 @@ class BadgeBlockView(APIView):
         return Response({'message':'Badge Status updated successfully'},status=status.HTTP_200_OK)
     
 
+# view to list badges for the specific user.
+# check if badge condition is met by the user.if met, then user has earned the badge.
 class UserEarnedBadgesView(APIView):
     permission_classes=[IsAuthenticated]
 

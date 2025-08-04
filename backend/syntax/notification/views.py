@@ -28,7 +28,8 @@ class MarkAllNotificationReadView(APIView):
 
 
 
-
+# Returns the number of unread notifications for the authenticated user.  
+# Filters notifications where `is_read` is False.
 class UnreadNotificationCountView(APIView):
     permission_classes=[IsAuthenticated]
 

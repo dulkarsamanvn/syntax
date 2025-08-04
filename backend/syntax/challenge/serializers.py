@@ -3,18 +3,13 @@ from challenge.models import Challenge,Submission,Solutions,ChallengeRequest
 
 class ChallengeSerializer(serializers.ModelSerializer):
 
-    start_time=serializers.SerializerMethodField()
-    end_time=serializers.SerializerMethodField()
+    start_time = serializers.DateTimeField(format="%Y-%m-%dT%H:%M", required=False, allow_null=True)
+    end_time = serializers.DateTimeField(format="%Y-%m-%dT%H:%M", required=False, allow_null=True)
     
     class Meta:
         model=Challenge
         fields='__all__'
 
-    def get_start_time(self,obj):
-        return obj.start_time.strftime('%Y-%m-%dT%H:%M') if obj.start_time else None
-    
-    def get_end_time(self,obj):
-        return obj.end_time.strftime('%Y-%m-%dT%H:%M') if obj.end_time else None
 
 
 class ChallengeCreateSerializer(serializers.ModelSerializer):

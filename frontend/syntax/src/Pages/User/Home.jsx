@@ -1,6 +1,7 @@
 import axiosInstance from "@/api/axiosInstance"
 import GiftReceivedModal from "@/Components/GiftReceivedModal"
 import GroupCard from "@/Components/GroupCard"
+import Spinner from "@/Components/Spinner"
 import useChatNotificationSocket from "@/hooks/useChatNotificationSocket"
 import useSystemNotificationSocket from "@/hooks/useSystemNotificationSocket"
 import {
@@ -17,7 +18,8 @@ import {
   Sparkles,
   ArrowRight,
   CircleCheck,
-  X
+  X,
+  Hourglass
 } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
@@ -46,6 +48,8 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [filteredChallenges, setFilteredChallenges] = useState([])
   const [availableTags, setAvailableTags] = useState([])
+  const [timedChallenges, setTimedChallenges] = useState(null)
+  const [isPageLoading,setIsPageLoading]=useState(true)
 
 
   const navigate = useNavigate()
@@ -149,10 +153,7 @@ export default function Home() {
     }
   }
 
-
-
-  useEffect(() => {
-    const fetch_profile = async () => {
+  const fetch_profile = async () => {
       try {
         const response = await axiosInstance.get("/profile/", { withCredentials: true })
         setUserProfile({
@@ -181,9 +182,37 @@ export default function Home() {
     }
 
 
-    fetch_profile()
-    fetchChallenges()
-    fetchGroups()
+    const fetchTimedChallenges = async () => {
+      try {
+        const res = await axiosInstance.get('/challenge/timed-challenge/')
+        setTimedChallenges(res.data)
+      } catch (err) {
+        console.error('error fetching timed challenges', err)
+      }
+    }
+
+
+
+  useEffect(() => {
+    const fetchAllData=async()=>{
+      setIsPageLoading(true)
+      try{
+        await Promise.all([
+          fetch_profile(),
+          fetchChallenges(),
+          fetchGroups(),
+          fetchTimedChallenges()
+        ])
+      }catch(err){
+        console.error('error fetching datas',err)
+      }finally{
+        setTimeout(() => {
+          setIsPageLoading(false)
+        }, 400);
+      }
+    }
+
+    fetchAllData()  
   }, [])
 
 
@@ -244,6 +273,16 @@ export default function Home() {
     } catch (err) {
       console.error('Failed to claim xp reward', err)
     }
+  }
+
+  if(isPageLoading){
+    return(
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
+      <div className="text-center">
+        <Spinner/>
+      </div>
+    </div>
+    )
   }
 
   return (
@@ -374,42 +413,61 @@ export default function Home() {
           <div className="grid grid-cols-1 gap-6">
             {/* Featured Challenge */}
             <div>
-              <div className="bg-gradient-to-br from-slate-800/90 via-slate-700/80 to-slate-800/90 rounded-2xl p-6 md:p-8 mb-8 border border-slate-600/30 shadow-2xl backdrop-blur-sm relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-transparent to-blue-600/10"></div>
-                <div className="relative z-10">
-                  <div className="flex items-center space-x-3 mb-6">
-                    <span className="bg-gradient-to-r from-purple-600 to-purple-700 text-xs px-3 py-1.5 rounded-full font-semibold shadow-lg flex items-center space-x-1">
-                      <Sparkles className="w-3 h-3" />
-                      <span>Limited Time</span>
-                    </span>
-                    <span className="bg-gradient-to-r from-red-600 to-red-700 text-xs px-3 py-1.5 rounded-full font-semibold shadow-lg">
-                      HARD
-                    </span>
+              {(timedChallenges === null || timedChallenges?.message === 'coming soon') ? (
+                <div className="bg-gradient-to-br from-slate-800/90 via-slate-700/80 to-slate-800/90 rounded-2xl p-6 md:p-8 mb-8 border border-slate-600/30 shadow-2xl backdrop-blur-sm relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-transparent to-blue-600/10"></div>
+                  <div className="relative z-10 text-center">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-700 rounded-full font-semibold text-sm text-white shadow-lg mb-4">
+                      <Hourglass className="w-4 h-4 animate-pulse" />
+                      Coming Soon
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-white via-yellow-100 to-orange-100 bg-clip-text text-transparent">
+                      Time-Limited Challenges
+                    </h2>
+                    <p className="text-base md:text-lg text-slate-300 leading-relaxed">
+                      Exclusive challenges with limited availability are on the way.
+                      Stay tuned and get ready to test your skills!
+                    </p>
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-cyan-100 bg-clip-text text-transparent">
-                    ZigZag Conventions
-                  </h2>
-                  <p className="text-base md:text-lg text-slate-300 mb-6 leading-relaxed">
-                    Descend into the depths of corrupted code fragments. Repair the digital ecosystem before the
-                    instability spreads to critical systems.
-                  </p>
-                  <div className="flex items-center space-x-6 text-base text-slate-400 mb-6">
-                    <span className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span>60 min</span>
-                    </span>
-                    <span className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                      <span>18% success rate</span>
-                    </span>
-                  </div>
-                  <button className="group bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 hover:from-blue-500 hover:via-blue-600 hover:to-cyan-500 px-8 py-4 rounded-xl font-semibold shadow-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-blue-500/25 flex items-center space-x-3">
-                    <span className="text-base">Enter Domain</span>
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
-                  </button>
                 </div>
-              </div>
+              ) : (
 
+                <div className="bg-gradient-to-br from-slate-800/90 via-slate-700/80 to-slate-800/90 rounded-2xl p-6 md:p-8 mb-8 border border-slate-600/30 shadow-2xl backdrop-blur-sm relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-transparent to-blue-600/10"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center space-x-3 mb-6">
+                      <span className="bg-gradient-to-r from-purple-600 to-purple-700 text-xs px-3 py-1.5 rounded-full font-semibold shadow-lg flex items-center space-x-1">
+                        <Sparkles className="w-3 h-3" />
+                        <span>Limited Time</span>
+                      </span>
+                      <span className="bg-gradient-to-r from-red-600 to-red-700 text-xs px-3 py-1.5 rounded-full font-semibold shadow-lg">
+                        {timedChallenges.difficulty}
+                      </span>
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-cyan-100 bg-clip-text text-transparent">
+                      {timedChallenges.title}
+                    </h2>
+                    <p className="text-base md:text-lg text-slate-300 mb-6 leading-relaxed">
+                      {timedChallenges.description}
+                    </p>
+                    <div className="flex items-center space-x-6 text-base text-slate-400 mb-6">
+                      <span className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span>{timedChallenges.time_limit} min</span>
+                      </span>
+                      <span className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                        <span>{timedChallenges.success_rate}%</span>
+                      </span>
+                    </div>
+                    <button onClick={()=>navigate(`/challenge/${timedChallenges.id}`)} className="group bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 hover:from-blue-500 hover:via-blue-600 hover:to-cyan-500 px-8 py-4 rounded-xl font-semibold shadow-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-blue-500/25 flex items-center space-x-3">
+                      <span className="text-base">Enter Domain</span>
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                    </button>
+                  </div>
+                </div>
+              )}
+              
               {/* Search Results Info */}
               {(searchQuery || activeFilter !== "All") && (
                 <div className="mb-6 p-4 bg-slate-800/50 rounded-lg border border-slate-600/30">
@@ -454,7 +512,6 @@ export default function Home() {
                   </button>
                 ))}
               </div>
-
               {filteredChallenges.length === 0 ? (
                 <div>
                   <h3 className="text-2xl md:text-3xl font-bold mb-6 bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
@@ -493,12 +550,6 @@ export default function Home() {
                         <h4 className="font-bold mb-3 text-lg text-white group-hover:text-blue-300 transition-colors duration-200">
                           {challenge.title}
                         </h4>
-
-                        {/* {challenge.is_completed && (
-                        <div className="inline-block mb-3 px-3 py-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs rounded-full font-medium shadow-md">
-                          Completed
-                        </div>
-                      )} */}
                         {challenge.is_completed && (
                           <div className="absolute -top-2 -right-2 px-3 py-1 bg-gray-700 text-green-400 text-xs rounded-full font-medium shadow-md z-10 flex items-center space-x-1.5 border border-gray-600">
                             <span className="text-white">Solved</span>
@@ -553,7 +604,7 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Available Challenges */}
+
 
 
               {/* Premium Features */}

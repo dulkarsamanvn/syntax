@@ -371,6 +371,8 @@ class JoinGroupView(APIView):
         
         
 
+# Returns the total number of unread messages for the authenticated user.  
+# Excludes messages sent by the user and only includes their chatrooms.
 class UnreadChatCountView(APIView):
     permission_classes=[IsAuthenticated]
 

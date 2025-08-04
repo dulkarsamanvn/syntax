@@ -1,7 +1,96 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { Gift, X, Sparkles, Star, ChevronRight, Heart } from "lucide-react"
+
+// Move styles to a separate CSS module or use Tailwind classes
+const customStyles = `
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.8; }
+    25% { transform: translateY(-10px) rotate(90deg); opacity: 1; }
+    50% { transform: translateY(-20px) rotate(180deg); opacity: 0.6; }
+    75% { transform: translateY(-10px) rotate(270deg); opacity: 1; }
+  }
+  
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+  
+  @keyframes fall-glow {
+    0% { 
+      transform: translateY(-20px) rotate(0deg); 
+      opacity: 0; 
+    }
+    10% { 
+      opacity: 1; 
+    }
+    90% { 
+      opacity: 0.8; 
+    }
+    100% { 
+      transform: translateY(calc(100vh + 50px)) rotate(360deg); 
+      opacity: 0; 
+    }
+  }
+  
+  @keyframes fall-glow-slow {
+    0% { 
+      transform: translateY(-30px) rotate(0deg) scale(0.8); 
+      opacity: 0; 
+    }
+    15% { 
+      opacity: 1; 
+      transform: translateY(0px) rotate(45deg) scale(1); 
+    }
+    85% { 
+      opacity: 0.9; 
+    }
+    100% { 
+      transform: translateY(calc(100vh + 60px)) rotate(720deg) scale(0.6); 
+      opacity: 0; 
+    }
+  }
+  
+  @keyframes fall-sparkle {
+    0% { 
+      transform: translateY(-20px) rotate(0deg) scale(1); 
+      opacity: 0; 
+    }
+    20% { 
+      opacity: 1; 
+    }
+    80% { 
+      opacity: 0.7; 
+    }
+    100% { 
+      transform: translateY(calc(100vh + 40px)) rotate(180deg) scale(0.5); 
+      opacity: 0; 
+    }
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .animate-twinkle {
+    animation: twinkle 2s ease-in-out infinite;
+  }
+  
+  .animate-fall-glow {
+    animation: fall-glow linear forwards;
+  }
+  
+  .animate-fall-glow-slow {
+    animation: fall-glow-slow linear forwards;
+  }
+  
+  .animate-fall-sparkle {
+    animation: fall-sparkle linear forwards;
+  }
+  
+  .animate-spin-fast {
+    animation: spin 3s linear infinite;
+  }
+`
 
 export default function GiftReceivedModal({ isOpen, onClose, day, xpAmount, onUseGift }) {
   const [animationStage, setAnimationStage] = useState(0)
@@ -26,6 +115,17 @@ export default function GiftReceivedModal({ isOpen, onClose, day, xpAmount, onUs
       clearTimeout(stage3)
     }
   }, [isOpen])
+
+  // Inject styles into document head
+  useEffect(() => {
+    const styleElement = document.createElement('style')
+    styleElement.textContent = customStyles
+    document.head.appendChild(styleElement)
+
+    return () => {
+      document.head.removeChild(styleElement)
+    }
+  }, [])
 
   const handleClaimGift = () => {
     setIsClaimed(true)
@@ -332,96 +432,6 @@ export default function GiftReceivedModal({ isOpen, onClose, day, xpAmount, onUs
           )}
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.8; }
-          25% { transform: translateY(-10px) rotate(90deg); opacity: 1; }
-          50% { transform: translateY(-20px) rotate(180deg); opacity: 0.6; }
-          75% { transform: translateY(-10px) rotate(270deg); opacity: 1; }
-        }
-        
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.2); }
-        }
-        
-        @keyframes fall-glow {
-          0% { 
-            transform: translateY(-20px) rotate(0deg); 
-            opacity: 0; 
-          }
-          10% { 
-            opacity: 1; 
-          }
-          90% { 
-            opacity: 0.8; 
-          }
-          100% { 
-            transform: translateY(calc(100vh + 50px)) rotate(360deg); 
-            opacity: 0; 
-          }
-        }
-        
-        @keyframes fall-glow-slow {
-          0% { 
-            transform: translateY(-30px) rotate(0deg) scale(0.8); 
-            opacity: 0; 
-          }
-          15% { 
-            opacity: 1; 
-            transform: translateY(0px) rotate(45deg) scale(1); 
-          }
-          85% { 
-            opacity: 0.9; 
-          }
-          100% { 
-            transform: translateY(calc(100vh + 60px)) rotate(720deg) scale(0.6); 
-            opacity: 0; 
-          }
-        }
-        
-        @keyframes fall-sparkle {
-          0% { 
-            transform: translateY(-20px) rotate(0deg) scale(1); 
-            opacity: 0; 
-          }
-          20% { 
-            opacity: 1; 
-          }
-          80% { 
-            opacity: 0.7; 
-          }
-          100% { 
-            transform: translateY(calc(100vh + 40px)) rotate(180deg) scale(0.5); 
-            opacity: 0; 
-          }
-        }
-        
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-        
-        .animate-twinkle {
-          animation: twinkle 2s ease-in-out infinite;
-        }
-        
-        .animate-fall-glow {
-          animation: fall-glow linear forwards;
-        }
-        
-        .animate-fall-glow-slow {
-          animation: fall-glow-slow linear forwards;
-        }
-        
-        .animate-fall-sparkle {
-          animation: fall-sparkle linear forwards;
-        }
-        
-        .animate-spin-fast {
-          animation: spin 3s linear infinite;
-        }
-      `}</style>
     </div>
   )
 }

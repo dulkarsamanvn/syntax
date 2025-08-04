@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import axiosInstance from '../../api/axiosInstance'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Search, Bell, MessageSquare, Clock, Code2, Users, Zap, Settings, BarChart3 } from "lucide-react"
+import { Search, Bell, MessageSquare, Clock, Code2, Users, Zap, Settings, BarChart3, ChevronLeft, ChevronRight } from "lucide-react"
 import { format } from "date-fns"
 
 
@@ -13,6 +13,10 @@ function UserProfile() {
   const [earnedBadges, setEarnedBadges] = useState([])
   const [languageStats,setLanguageStats]=useState([])
   const [domainStats,setDomainStats]=useState({})
+  const [current_page,setCurrentPage]=useState(1)
+  const [totalPages,setTotalPages]=useState(1)
+
+  const pageSize=10
 
   const navigate = useNavigate()
   const location = useLocation()
@@ -58,16 +62,18 @@ function UserProfile() {
   }
 
   useEffect(() => {
-    const fetchXpHistory = async () => {
+    const fetchXpHistory = async (page=1) => {
       try {
-        const res = await axiosInstance.get('/profile/xp-history/')
-        setXpHistory(res.data)
+        const res = await axiosInstance.get(`/profile/xp-history/?page=${page}&page_size=3`)
+        setXpHistory(res.data.results)
+        setCurrentPage(res.data.current_page)
+        setTotalPages(res.data.total_pages)
       } catch (err) {
         console.error('error fetching xp history', err)
       }
     }
-    fetchXpHistory()
-  }, [])
+    fetchXpHistory(current_page)
+  }, [current_page])
 
   const handleRedirect = () => {
     navigate('/home')
@@ -101,39 +107,6 @@ function UserProfile() {
     hardCompleted: 11,
     hardTotal: 234,
   }
-
-  // const badges = [
-  //   {
-  //     icon: Clock,
-  //     title: "Fast Solver",
-  //     description: "Solved 10 challenges in under 5 minutes each",
-  //     color: "bg-blue-600",
-  //   },
-  //   {
-  //     icon: Code2,
-  //     title: "Debugging Master",
-  //     description: "Fixed 50 bugs across various challenges",
-  //     color: "bg-blue-600",
-  //   },
-  //   {
-  //     icon: Zap,
-  //     title: "Elite Coder",
-  //     description: "Solved 10+ challenges Without Hint",
-  //     color: "bg-blue-600",
-  //   },
-  //   {
-  //     icon: Users,
-  //     title: "Social Collaborator",
-  //     description: "Helped 20+ Members solve challenges",
-  //     color: "bg-blue-600",
-  //   },
-  // ]
-
-  // const languages = [
-  //   { name: "Python", progress: 12, maxProgress: 150 },
-  //   { name: "Python 3", progress: 127, maxProgress: 150 },
-  //   { name: "Javascript", progress: 44, maxProgress: 150 },
-  // ]
 
   const recentActivity = [
     { name: "Longest SubString", time: "2 hours ago" },
@@ -316,9 +289,36 @@ function UserProfile() {
                         </div>
                       ))}
                     </div>
+                    
                   )}
                 </div>
+                {totalPages > 1 && (
+  <div className="flex justify-center items-center gap-4 mt-6">
+    <button
+      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+      disabled={current_page === 1}
+      className={`p-2 rounded-full bg-slate-700 hover:bg-slate-600 text-white transition ${
+        current_page === 1 ? 'opacity-40 cursor-not-allowed' : ''
+      }`}
+    >
+      <ChevronLeft size={20} />
+    </button>
 
+    <span className="text-sm text-white">
+      Page {current_page} of {totalPages}
+    </span>
+
+    <button
+      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+      disabled={current_page === totalPages}
+      className={`p-2 rounded-full bg-slate-700 hover:bg-slate-600 text-white transition ${
+        current_page === totalPages ? 'opacity-40 cursor-not-allowed' : ''
+      }`}
+    >
+      <ChevronRight size={20} />
+    </button>
+  </div>
+)}
               </div>
             )}
 

@@ -83,6 +83,9 @@ class DashboardStatsView(APIView):
         })
 
 
+
+# Generates and returns a downloadable CSV report containing user and challenge statistics.  
+# Includes metrics like user activity, completion rate, and revenue over a 7-day window.
 class ReportDownloadView(APIView):
     permission_classes=[IsAuthenticated]
 

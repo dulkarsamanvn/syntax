@@ -197,6 +197,8 @@ class MembershipHistoryView(APIView):
         return Response(data)
 
 
+# Allows staff or superusers to enable or disable a premium plan by updating its `is_active` status.  
+# Returns a success message if the update is completed, or appropriate error responses otherwise
 class PremiumPlanBlockView(APIView):
     permission_classes=[IsAuthenticated]
 

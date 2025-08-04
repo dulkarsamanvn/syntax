@@ -1,5 +1,5 @@
 from django.urls import path
-from challenge.views import ChallengeCreateView,ChallengeListView,ChallengeBlockView,ChallengeDetailView,RunChallengeView,SubmitChallengeView,SubmissionListView,ChallengeUpdateView,SolutionListView,CreateSolutionView,SolutionEditView,SolutionDeleteView,CompletedLanguagesStatsView,UserDomainStatsView,CreateChallengeRequestView,ChallengeRequestListView,ChallengeRequestStatusUpdateView
+from challenge.views import ChallengeCreateView,ChallengeListView,ChallengeBlockView,ChallengeDetailView,RunChallengeView,SubmitChallengeView,SubmissionListView,ChallengeUpdateView,SolutionListView,CreateSolutionView,SolutionEditView,SolutionDeleteView,CompletedLanguagesStatsView,UserDomainStatsView,CreateChallengeRequestView,ChallengeRequestListView,ChallengeRequestStatusUpdateView,TimeLimitedChallengesView
 
 urlpatterns = [
     path('create/',ChallengeCreateView.as_view(),name='create_challenge'),
@@ -19,5 +19,6 @@ urlpatterns = [
     path('create-challenge-request/',CreateChallengeRequestView.as_view(),name='create-challenge-request'),
     path('challenge-requests/',ChallengeRequestListView.as_view(),name='challenge-requests'),
     path('request-status-update/<int:request_id>/',ChallengeRequestStatusUpdateView.as_view(),name='request-status-update'),
+    path('timed-challenge/',TimeLimitedChallengesView.as_view(),name='timed-challenge'),
 
 ]

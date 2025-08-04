@@ -14,6 +14,7 @@ from accounts.models import User
 from notification.utils import send_system_notification
 from badge.utils import award_badges_on_submission
 from django.db.models import Q
+from django.utils import timezone
 
 
 # Handles the creation of a new coding challenge. 
@@ -610,6 +611,8 @@ class SolutionEditView(APIView):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
+# Returns the number of completed challenges per programming language 
+# for the authenticated user using aggregation.
 class CompletedLanguagesStatsView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -625,6 +628,8 @@ class CompletedLanguagesStatsView(APIView):
         return Response(list(completed_count))
     
 
+# Provides stats like total submissions, completion count, acceptance rate, 
+# and difficulty-level wise challenge completion for the user.
 class UserDomainStatsView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -668,6 +673,9 @@ class UserDomainStatsView(APIView):
         })
 
 
+
+# Allows users to submit a request to create a new challenge.
+# Sends a system notification upon successful submission.
 class CreateChallengeRequestView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -686,6 +694,8 @@ class CreateChallengeRequestView(APIView):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
+# Returns a paginated list of challenge requests.
+# Admins see all requests, users see only their own; supports search.
 class ChallengeRequestListView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -716,7 +726,8 @@ class ChallengeRequestListView(APIView):
             'count':count
         })
 
-
+# Allows admins to update the status of a submitted challenge request.
+# Sends a system notification to the requester on status update.
 class ChallengeRequestStatusUpdateView(APIView):
     permission_classes=[IsAuthenticated]
 
@@ -738,3 +749,30 @@ class ChallengeRequestStatusUpdateView(APIView):
 
             return Response({'message':'status updated successfully'})
         return Response({'error':'no status provided'},status=status.HTTP_400_BAD_REQUEST)
+
+
+# Returns the currently active time-limited challenge if available.
+# Also includes success rate based on completed submissions.
+class TimeLimitedChallengesView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def get(self,request):
+        now=timezone.now()
+        challenge=Challenge.objects.filter(start_time__isnull=False,end_time__isnull=False,start_time__lte=now,end_time__gte=now).order_by('-start_time').first()
+        if challenge:
+            serializer=ChallengeSerializer(challenge)
+            challenge_data=serializer.data
+
+            total_attempts=Submission.objects.filter(challenge=challenge).count()
+            completed_users_count=Submission.objects.filter(challenge=challenge,is_completed=True).values('user').distinct().count()
+            if total_attempts > 0:
+                success_rate=round((completed_users_count/total_attempts)*100,2)
+            else:
+                success_rate=0.0
+            
+            challenge_data['success_rate']=success_rate
+
+            return Response(challenge_data)
+        else:
+            return Response({'message':'coming soon'},status=status.HTTP_200_OK)
+

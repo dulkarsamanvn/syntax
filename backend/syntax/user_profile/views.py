@@ -8,7 +8,7 @@ from rest_framework import status
 from user_profile.models import Level,DailyXPClaim,UserProfile
 from challenge.models import Submission
 from datetime import date
-
+from django.core.paginator import Paginator
 
 # View to retrieve and update the authenticated user's profile.
 # GET: Returns the user's profile data and triggers a level-up check.
@@ -82,6 +82,8 @@ class XpHistoryView(APIView):
     permission_classes=[IsAuthenticated]
 
     def get(self,request):
+        page=int(request.GET.get('page',1))
+        page_size=int(request.GET.get('page_size',10))
         submissions=Submission.objects.filter(user=request.user,xp_awarded__gt=0).order_by('-created_at')
         rewards=DailyXPClaim.objects.filter(user=request.user).order_by('-claimed_at')
         history=[]
@@ -100,7 +102,15 @@ class XpHistoryView(APIView):
                 'created_at': r.claimed_at
             })
         history.sort(key=lambda x:x['created_at'], reverse=True)
-        return Response(history)
+        paginator=Paginator(history,page_size)
+        page_obj=paginator.get_page(page)
+        results=page_obj.object_list
+        count=paginator.count
+        return Response({
+            'results':results,
+            'current_page':page,
+            'total_pages':paginator.num_pages
+        })
 
 
 # view to update the password
