@@ -11,6 +11,8 @@ function Login() {
   const navigate = useNavigate()
   const googleLoginWrapperRef = useRef(null);
 
+  const API_URL=import.meta.env.VITE_API_URL
+
   const handleLogin = async (e) => {
     e.preventDefault()
     if (!email) {
@@ -27,7 +29,7 @@ function Login() {
       return
     }
     try {
-      const response = await axios.post("http://localhost:8000/login/", { email, password }, { withCredentials: true })
+      const response = await axios.post(`${API_URL}/login/`, { email, password }, { withCredentials: true })
 
       localStorage.setItem("username", response.data.username)
       localStorage.setItem('isAuthenticated', 'true')
@@ -54,7 +56,7 @@ function Login() {
   const handleSuccess = async (credentialResponse) => {
     const token = credentialResponse.credential;
     try {
-      const res = await axios.post('http://localhost:8000/google/', { token }, { withCredentials: true })
+      const res = await axios.post(`${API_URL}/google/`, { token }, { withCredentials: true })
       console.log('Login Success', res.data)
       localStorage.setItem("username", res.data.username)
       localStorage.setItem('isAuthenticated', 'true')

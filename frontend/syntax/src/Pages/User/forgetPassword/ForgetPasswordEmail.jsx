@@ -8,6 +8,8 @@ function ForgetPasswordEmail() {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
 
+  const API_URL=import.meta.env.VITE_API_URL
+
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -20,7 +22,7 @@ function ForgetPasswordEmail() {
     setMessage("")
 
     try {
-      const response = await axios.post("http://localhost:8000/forgot-password/", {email},{withCredentials:true})
+      const response = await axios.post(`${API_URL}/forgot-password/`, {email},{withCredentials:true})
 
       setMessage("Verification code sent to your email successfully")
 

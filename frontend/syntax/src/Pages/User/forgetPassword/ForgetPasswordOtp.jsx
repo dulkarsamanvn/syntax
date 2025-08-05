@@ -10,6 +10,8 @@ function ForgetPasswordOtp() {
   const email = localStorage.getItem("resetEmail")
   const navigate = useNavigate()
 
+  const API_URL=import.meta.env.VITE_API_URL
+
   const inputRefs=useRef([])
 
   useEffect(() => {
@@ -50,7 +52,7 @@ function ForgetPasswordOtp() {
     }
 
     try {
-      const response = await axios.post("http://localhost:8000/verify-reset-code/", { email, otp: otpString },{withCredentials:true})
+      const response = await axios.post(`${API_URL}/verify-reset-code/`, { email, otp: otpString },{withCredentials:true})
       setMessage(response.data.message)
       setTimeout(() => {
         navigate("/reset-password")
@@ -63,7 +65,7 @@ function ForgetPasswordOtp() {
   const handleResend = async () => {
     try {
       console.log("Email for resend:", email)
-      const response = await axios.post("http://localhost:8000/resend_otp/", { email },{withCredentials:true})
+      const response = await axios.post(`${API_URL}/resend_otp/`, { email },{withCredentials:true})
       setMessage(response.data.message)
       setCooldown(60)
     } catch (error) {

@@ -8,12 +8,14 @@ function AdminLogin() {
   const [message, setMessage] = useState("")
   const navigate = useNavigate()
 
+  const API_URL=import.meta.env.VITE_API_URL
+
   const handleAdminLogin = async (e) => {
     e.preventDefault()
     console.log("Sending login:", { email, password })
     try {
       const response = await axios.post(
-        "http://localhost:8000/adminlogin/",
+        `${API_URL}/adminlogin/`,
         { email, password },
         { withCredentials: true },
       )

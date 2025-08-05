@@ -9,6 +9,8 @@ function ResetPassword() {
     const [message,setMessage]=useState('')
     const navigate=useNavigate()
 
+    const API_URL=import.meta.env.VITE_API_URL
+
     const email=localStorage.getItem('resetEmail')
 
     const handleSubmit=async(e)=>{
@@ -38,7 +40,7 @@ function ResetPassword() {
         setMessage("")
 
         try{
-            const res=await axios.post('http://localhost:8000/reset-password/',{
+            const res=await axios.post(`${API_URL}/reset-password/`,{
                 email,
                 password
             },{withCredentials:true})
