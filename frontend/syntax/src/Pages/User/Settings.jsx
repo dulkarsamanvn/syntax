@@ -1,12 +1,12 @@
 import axiosInstance from "@/api/axiosInstance"
 import { useNavigate } from "react-router-dom"
-import { Button } from "@/Components/ui/Button.jsx"
 import { ArrowLeft, Trophy, ChevronDown, Shield, Bell, Crown, LogOut} from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/Card.jsx"
 import { useEffect, useState } from "react"
 import Spinner from "@/Components/Spinner"
 import ConfirmModal from "@/Components/ConfirmModal"
 import { format } from "date-fns"
+import { Button } from "@/Components/ui/Button.jsx"
+import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/Card.jsx"
 
 function Settings() {
   const [current, setCurrent] = useState(null)
