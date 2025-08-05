@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import AdminSideBar from "../../Components/AdminSideBar"
 import axiosInstance from "@/api/axiosInstance"
-import { Card, CardContent } from "@/Components/ui/Card"
+import { Card, CardContent } from "@/Components/ui/Card.jsx"
 import Spinner from "@/Components/Spinner"
 import { BarChart3, FileText, Users, Trophy, DollarSign } from "lucide-react"
 import { useNavigate } from "react-router-dom"

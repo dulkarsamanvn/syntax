@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react'
 import axiosInstance from '@/api/axiosInstance'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Camera, Github, Twitter, MessageSquare, X } from "lucide-react"
-import { Button } from "@/Components/ui/Button"
-import { Input } from "@/Components/ui/Input"
-import { Label } from "@/Components/ui/Label"
-import { Textarea } from "@/Components/ui/Textarea"
-import { Switch } from "@/Components/ui/Switch"
+import { Button } from "@/Components/ui/Button.jsx"
+import { Input } from "@/Components/ui/Input.jsx"
+import { Label } from "@/Components/ui/Label.jsx"
+import { Textarea } from "@/Components/ui/Textarea.jsx"
+import { Switch } from "@/Components/ui/Switch.jsx"
 
 function EditProfile() {
     const [emailNotifications, setEmailNotifications] = useState(true)

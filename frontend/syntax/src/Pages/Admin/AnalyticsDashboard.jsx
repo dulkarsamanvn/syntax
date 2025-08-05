@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import AdminSideBar from "../../Components/AdminSideBar"
 import axiosInstance from "@/api/axiosInstance"
-import { Card, CardContent } from "@/Components/ui/Card"
+import { Card, CardContent } from "@/Components/ui/Card.jsx"
 import Spinner from "@/Components/Spinner"
 import { ArrowLeft, TrendingUp, PieChart, Users, DollarSign } from "lucide-react"
 import {
