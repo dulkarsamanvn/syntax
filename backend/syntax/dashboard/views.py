@@ -91,7 +91,7 @@ class ReportDownloadView(APIView):
 
     def get(self,request):
         response=HttpResponse(content_type='text/csv')
-        filename=f'report_{datetime.now().strftime('%Y%m%d')}.csv'
+        filename=f"report_{datetime.now().strftime('%Y%m%d')}.csv"
         response["Content-Disposition"]=f'attachment; filename="{filename}"'
 
         writer=csv.writer(response)
