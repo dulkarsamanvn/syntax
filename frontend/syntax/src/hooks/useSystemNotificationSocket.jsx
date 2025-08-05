@@ -5,10 +5,12 @@ import { useNavigate } from 'react-router-dom'
 function useSystemNotificationSocket(userId,onNewNotification) {
   const navigate=useNavigate()
 
+  const WS_URL=import.meta.env.VITE_WS_BASE
+
  useEffect(()=>{
     if(!userId) return
 
-    const socket=new WebSocket('ws://localhost:8000/ws/system-notifications/')
+    const socket=new WebSocket(`${WS_URL}/ws/system-notifications/`)
 
     socket.onmessage=(event)=>{
         const data=JSON.parse(event.data)

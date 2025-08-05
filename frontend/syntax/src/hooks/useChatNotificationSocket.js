@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react'
 
 function useChatNotificationSocket(userId,fetchUnreadChatCount) {
+    const WS_URL=import.meta.env.VITE_WS_BASE
+
     useEffect(()=>{
         if(!userId) return
 
-        const socket=new WebSocket('ws://localhost:8000/ws/notifications/')
+        const socket=new WebSocket(`${WS_URL}/ws/notifications/`)
         socket.onmessage=(event)=>{
             const data=JSON.parse(event.data)
             if(data.type==='new_message'){

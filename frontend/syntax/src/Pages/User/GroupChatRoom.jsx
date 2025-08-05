@@ -27,6 +27,8 @@ function GroupChatRoom() {
   const fileInputRef = useRef(null)
   const navigate = useNavigate()
 
+  const WS_URL=import.meta.env.VITE_WS_BASE
+
   useEffect(() => {
     const fetchGroupInfo = async () => {
       const res = await axiosInstance.get(`/chat/group-details/${id}/`)
@@ -68,7 +70,7 @@ function GroupChatRoom() {
 
   useEffect(() => {
     if (!currentUserId) return
-    const ws = new WebSocket(`ws://localhost:8000/ws/chat/${id}/`)
+    const ws = new WebSocket(`${WS_URL}/ws/chat/${id}/`)
     ws.onopen = () => {
       console.log("WebSocket connected!")
       setIsConnected(true)

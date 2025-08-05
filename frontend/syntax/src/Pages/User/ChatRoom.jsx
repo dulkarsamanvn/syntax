@@ -21,6 +21,8 @@ function ChatRoom() {
   const fileInputRef = useRef(null)
   const navigate = useNavigate()
 
+  const WS_URL=import.meta.env.VITE_WS_BASE
+
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -52,7 +54,7 @@ function ChatRoom() {
         const roomId = res.data.room_id
         roomIdRef.current = roomId
         console.log("Connecting to WebSocket room:", roomId)
-        newSocket = new WebSocket(`ws://localhost:8000/ws/chat/${roomId}/`)
+        newSocket = new WebSocket(`${WS_URL}/ws/chat/${roomId}/`)
 
         newSocket.onopen = () => {
           console.log("WebSocket connected!")

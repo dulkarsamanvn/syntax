@@ -23,6 +23,8 @@ function ChatHome() {
   const location=useLocation()
   const navigate = useNavigate()
 
+  const WS_URL=import.meta.env.VITE_WS_BASE
+
   const fetchChats = async () => {
     try {
       setLoading(true)
@@ -82,7 +84,7 @@ function ChatHome() {
 
 
   useEffect(() => {
-    notificationSocket.current = new WebSocket(`ws://localhost:8000/ws/notifications/`)
+    notificationSocket.current = new WebSocket(`${WS_URL}/ws/notifications/`)
     notificationSocket.current.onopen = () => {
       console.log("notification socket Connected")
     }
