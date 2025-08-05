@@ -101,7 +101,7 @@ function Login() {
 
           <div className="space-y-3 mb-6">
 
-            <GoogleLogin
+            {/* <GoogleLogin
               onSuccess={handleSuccess}
               onError={handleError}
               render={(renderProps) => (
@@ -119,9 +119,8 @@ function Login() {
                   Continue with Google
                 </button>
               )}
-            />
-
-            {/* <div className="relative w-full">
+            /> */}
+            <div className="relative w-full">
               <div ref={googleLoginWrapperRef} className="absolute inset-0 opacity-0">
                 <GoogleLogin
                   onSuccess={handleSuccess}
@@ -144,7 +143,7 @@ function Login() {
                 </svg>
                 Continue with Google
               </button>
-            </div> */}
+            </div>
           </div>
 
           <div className="text-center mb-6">
