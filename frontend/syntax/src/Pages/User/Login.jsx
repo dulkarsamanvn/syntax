@@ -100,17 +100,19 @@ function Login() {
           </div>
 
           <div className="space-y-3 mb-6">
+            <div className="flex justify-center w-full">
 
-            <GoogleLogin
-              onSuccess={handleSuccess}
-              onError={handleError}
-              theme="filled_white"
-              size="large"
-              width="100%"
-              text="continue_with"
-              shape="rectangular"
+              <GoogleLogin
+                onSuccess={handleSuccess}
+                onError={handleError}
+                theme="filled_white"
+                size="large"
+                width="100%"
+                text="continue_with"
+                shape="rectangular"
 
-            />
+              />
+            </div>
 
           </div>
 
