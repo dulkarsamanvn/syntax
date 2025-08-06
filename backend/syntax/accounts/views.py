@@ -314,11 +314,7 @@ class AdminLoginView(APIView):
         email=request.data.get('email')
         password=request.data.get('password')
 
-        print("Email received:", email)
-        print("Password received:", password)
-
         user=authenticate(username=email,password=password)
-        print("Authenticated user:", user)
 
         if not user:
             return Response({'detail':'Invalid Credentials'},status=status.HTTP_401_UNAUTHORIZED)

@@ -12,6 +12,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     xp_for_next_level = serializers.SerializerMethodField(read_only=True) 
     xp_needed = serializers.SerializerMethodField(read_only=True)
     profile_photo_url = serializers.SerializerMethodField(read_only=True)
+    sample_data=serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model=User
@@ -22,7 +23,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'id',
             'email', 'xp', 'current_streak', 'longest_streak',
             'is_premium', 'level', 'rank',
-            'rank_title', 'xp_for_next_level', 'xp_needed','profile_photo_url'
+            'rank_title', 'xp_for_next_level', 'xp_needed','profile_photo_url','sample_data'
         ]
         
     def get_rank(self,obj):
@@ -46,6 +47,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if obj.profile_photo:
             return obj.profile_photo.url
         return None
+
+    def sample_data(self,obj):
+        return "sample data"
 
 
 
