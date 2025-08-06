@@ -18,7 +18,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model=User
         fields=['id',
                 'username', 'email', 'xp', 'current_streak', 'longest_streak',
-                'is_premium', 'profile_photo', 'level', 'rank','rank_title','xp_for_next_level','xp_needed','profile_photo_url']
+                'is_premium', 'profile_photo', 'level', 'rank','rank_title','xp_for_next_level','xp_needed','profile_photo_url','sample_data']
         read_only_fields = [
             'id',
             'email', 'xp', 'current_streak', 'longest_streak',
@@ -48,8 +48,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
             return obj.profile_photo.url
         return None
 
-    def sample_data(self,obj):
-        return "sample data"
+    def get_sample_data(self,obj):
+        if obj:
+            return "sample data"
 
 
 
