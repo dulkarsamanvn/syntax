@@ -65,7 +65,7 @@ function ForgetPasswordOtp() {
   const handleResend = async () => {
     try {
       console.log("Email for resend:", email)
-      const response = await axios.post(`${API_URL}/resend_otp/`, { email },{withCredentials:true})
+      const response = await axios.post(`${API_URL}/resend-otp/`, { email },{withCredentials:true})
       setMessage(response.data.message)
       setCooldown(60)
     } catch (error) {

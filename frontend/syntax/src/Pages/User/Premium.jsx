@@ -7,7 +7,7 @@ import Spinner from '@/Components/Spinner'
 function Premium() {
     const [plans, setPlans] = useState([])
     const [loading, setLoading] = useState(false)
-    const [isSubscribed, setIsSubscribed] = useState(false)
+    const [activePlanId, setActivePlanId] = useState(null)
     const navigate = useNavigate()
 
     const RAZORPAY_KEY_ID = 'rzp_test_OdNxnDyzMRmvHL'
@@ -21,7 +21,9 @@ function Premium() {
                     axiosInstance.get('/premium/check-subscription/')
                 ])
                 setPlans(PlansRes.data)
-                setIsSubscribed(SubscriptionRes.data.is_premium)
+                if(SubscriptionRes.data.is_premium){
+                    setActivePlanId(SubscriptionRes.data.plan_id)
+                }
             } catch (err) {
                 console.error("Error fetching plans ", err)
             } finally {
@@ -118,7 +120,7 @@ function Premium() {
                                     </div>
                                     <p className="text-sm text-gray-500">{plan.duration_days} days</p>
                                 </div>
-                                {isSubscribed ? (
+                                {activePlanId === plan.id ? (
                                     <button className="w-full mt-4 px-4 py-3 bg-green-500 text-white rounded-lg font-medium cursor-not-allowed">
                                         Subscribed
                                     </button>
