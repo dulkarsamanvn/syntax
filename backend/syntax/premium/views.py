@@ -156,6 +156,7 @@ class CheckSubscriptionView(APIView):
         if subscription and not subscription.has_expired():
             return Response({
                 "is_premium": True,
+                'plan_id':subscription.plan.id,
                 "plan_name": subscription.plan.name,
                 "end_date": subscription.end_date,
                 'start_date':subscription.start_date,

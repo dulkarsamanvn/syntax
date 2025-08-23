@@ -40,8 +40,18 @@ class SignupView(APIView):
             )
 
             send_mail(
-                subject='your OTP Code',
-                message=f'your OTP code is {code}',
+                subject='🔐 Verify Your Email for Syntax App',
+                message=f"""
+                    Thank you for registering with Syntax App!
+
+                    Your One-Time Password (OTP) is: {code}
+
+                    This code is valid for 5 minutes. Please do not share it with anyone.
+
+                    If you did not request this, please ignore this email.
+
+                    — The Syntax App Team
+                """,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email]
                 
@@ -106,9 +116,7 @@ class VerifyOTPView(APIView):
 class ResendOTPView(APIView):
     permission_classes=[]
     def post(self,request):
-        print("resend otp called")
         email=request.data.get('email')
-        print("email received",email)
         if not email:
             return Response({'error':'email is required'},status=status.HTTP_400_BAD_REQUEST)
         
@@ -126,8 +134,18 @@ class ResendOTPView(APIView):
             )
 
             send_mail(
-                subject='your OTP code is',
-                message=f'Your new OTP code is {code}',
+                subject='Your New OTP for Syntax App',
+                message=f"""
+                    You requested a new OTP for your Syntax App account.
+
+                    Your One-Time Password (OTP) is: {code}
+
+                    This code is valid for 5 minutes. Please do not share it with anyone.
+
+                    If you did not request this, please ignore this email.
+
+                    — The Syntax App Team
+                """,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email]
             )
@@ -438,8 +456,18 @@ class ForgetPasswordView(APIView):
         )
 
         send_mail(
-            subject='Your OTP Code for Reset Password ',
-            message=f'Your OTP Code is {code} ',
+            subject='🔑 Reset Your Password for Syntax App',
+            message=f"""
+                    We received a request to reset the password for your Syntax App account.
+
+                    Your One-Time Password (OTP) is: {code}
+
+                    This code is valid for 5 minutes. Please do not share it with anyone.
+
+                    If you did not request this, please ignore this email.
+
+                    — The Syntax App Team
+                """,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email]
         )

@@ -191,6 +191,7 @@ AUTH_USER_MODEL='accounts.User'
 
 CORS_ALLOWED_ORIGINS=[
      "https://syntax.dulkarsaman.site",
+      "http://localhost:5173",
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False 
