@@ -1,134 +1,172 @@
-Syntax — Coding Challenge Platform
+# Syntax — Coding Challenge Platform
 
-Syntax is a full-stack web application for coding challenges, learning, and collaboration. It allows users to solve coding problems, track progress, and upgrade to premium plans for exclusive features.
+Syntax is a full-stack web application designed for coding challenges, learning, and collaboration. It provides users with an interactive platform to solve coding problems, track their progress, and upgrade to premium plans for exclusive features.
 
-Features
+## 🚀 Features
 
-User Features
+### User Features
+- **Authentication**: Email verification with OTP and Google OAuth2 login
+- **Challenge Platform**: Solve coding challenges, submit solutions, and view community solutions
+- **Premium Subscription**: Access exclusive content with premium plans
+- **Profile Management**: Track progress, view solutions, and manage subscription details
+- **Real-time Chat**: One-to-one and group chats with media sharing (images, files) and emoji reactions
+- **Password Reset**: Secure OTP-based password recovery
 
-Sign Up / Login: Email verification with OTP and Google OAuth2 login.
+### Admin Features
+- **User Management**: View, search, and manage user accounts (block/unblock functionality)
+- **Challenge Management**: Create, update, and manage coding challenges
+- **Premium Plans**: Create, update, or deactivate subscription plans
+- **Analytics Dashboard**: Comprehensive tracking of users, challenges, revenue, and platform metrics
+- **Chat Management**: Monitor group chats and manage membership
 
-Challenge Platform: Solve coding challenges, submit solutions, and view others’ solutions.
+## 🛠 Tech Stack
 
-Premium Subscription: Upgrade to premium for exclusive content.
+| Category | Technology |
+|----------|------------|
+| **Frontend** | React, Tailwind CSS, Vite |
+| **Backend** | Django, Django REST Framework |
+| **Authentication** | JWT, Google OAuth2 |
+| **Database** | PostgreSQL |
+| **Payments** | Razorpay |
+| **Deployment** | Vercel (Frontend), AWS EC2 (Backend) |
+| **Real-time** | Django Channels, WebSockets |
 
-Profile Management: View progress, solutions, and subscription details.
+## 📦 Installation
 
-Real-time Chat: One-to-one and group chats including sending media (images, files), and emoji reactions.
+### Prerequisites
+- Python 3.8+
+- Node.js 16+
+- PostgreSQL
+- Git
 
-Password Reset: Secure OTP-based password reset functionality.
+### Backend Setup
 
-Admin Features
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/dulkarsamanvn/syntax.git
+   cd syntax/backend
+   ```
 
-User Management: View, search, and block/unblock users.
+2. **Create and activate virtual environment**
+   ```bash
+   # Linux/Mac
+   python -m venv env
+   source env/bin/activate
+   
+   # Windows
+   python -m venv env
+   env\Scripts\activate
+   ```
 
-Challenge Management: Create, update, and manage coding challenges.
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-Premium Plans: Create, update, or deactivate subscription plans.
+4. **Apply database migrations**
+   ```bash
+   python manage.py migrate
+   ```
 
-Analytics Dashboard: Track users, challenges, revenue, and more.
+5. **Start the development server**
+   ```bash
+   python manage.py runserver
+   ```
 
-Chat Management: Monitor group chats and manage membership if needed.
+### Frontend Setup
 
-Tech Stack
+1. **Navigate to frontend directory**
+   ```bash
+   cd syntax/frontend/syntax
+   ```
 
-Frontend: React, Tailwind CSS, Vite
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-Backend: Django, Django REST Framework
+3. **Start the development server**
+   ```bash
+   npm run dev
+   ```
 
-Authentication: JWT, Google OAuth2
+## ⚙️ Environment Variables
 
-Database: PostgreSQL
-
-Payments: Razorpay
-
-Deployment: Vercel (frontend), AWS EC2 (backend)
-
-Real-time features: Django Channels, WebSockets
-
-Installation
-
-Backend
-
-Clone the repository:
-
-git clone https://github.com/dulkarsamanvn/syntax.git
-cd syntax/backend
-
-
-Create a virtual environment:
-
-python -m venv env
-source env/bin/activate  # Linux/Mac
-env\Scripts\activate     # Windows
-
-
-Install dependencies:
-
-pip install -r requirements.txt
-
-
-Apply migrations:
-
-python manage.py migrate
-
-
-Run the server:
-
-python manage.py runserver
-
-Frontend
-
-Navigate to frontend folder:
-
-cd syntax/frontend/syntax
-
-
-Install dependencies:
-
-npm install
-
-
-Start the development server:
-
-npm run dev
-
-Environment Variables
-
-Create a .env file in both backend and frontend as needed.
-
-Backend
-
-SECRET_KEY = ------your secret key
-
-EMAIL_BACKEND = ------email backend
-EMAIL_HOST = ------email host
-EMAIL_PORT = ------email port
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = ------host user
-EMAIL_HOST_PASSWORD = ------host pass  
-
-GOOGLE_CLIENT_ID =------google cliend id
-
-CLOUDINARY_CLOUD_NAME=------cloud name
-CLOUDINARY_API_KEY=-------cloudinary key
-CLOUDINARY_API_SECRET=-----cloudinary secret
-
-RAZORPAY_KEY_ID=------key id
-RAZORPAY_KEY_SECRET=------ key secret
-POSTGRES_DB=------database name
-POSTGRES_USER=------- database user
-POSTGRES_PASSWORD=------ database password
-POSTGRES_HOST= ----- database host
-POSTGRES_PORT=5432
+### Backend (.env)
+```env
+# Django Settings
+SECRET_KEY=your-secret-key
 DEBUG=True
 
-Frontend
+# Email Configuration
+EMAIL_BACKEND=your-email-backend
+EMAIL_HOST=your-email-host
+EMAIL_PORT=your-email-port
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your-host-user
+EMAIL_HOST_PASSWORD=your-host-password
 
+# Google OAuth
+GOOGLE_CLIENT_ID=your-google-client-id
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-cloudinary-key
+CLOUDINARY_API_SECRET=your-cloudinary-secret
+
+# Razorpay
+RAZORPAY_KEY_ID=your-razorpay-key-id
+RAZORPAY_KEY_SECRET=your-razorpay-key-secret
+
+# Database
+POSTGRES_DB=your-database-name
+POSTGRES_USER=your-database-user
+POSTGRES_PASSWORD=your-database-password
+POSTGRES_HOST=your-database-host
+POSTGRES_PORT=5432
+```
+
+### Frontend (.env)
+```env
 VITE_API_BASE_URL=https://your-backend-url.com
+```
 
+## 🐳 Docker Setup
 
 To run the backend with Docker:
 
+```bash
 docker-compose build
 docker-compose up
+```
+
+## 📁 Project Structure
+
+```
+syntax/
+├── backend/
+│   ├── syntax/
+│       ├── manage.py
+│       ├── requirements.txt
+│       ├── docker-compose.yml
+│       └── ...
+├── frontend/
+│   ├── syntax/
+│       ├── package.json
+│       ├── vite.config.js
+│       └── ...
+└── README.md
+```
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 👨‍💻 Author
+
+**Dulkar Saman**
+- GitHub: [@dulkarsamanvn](https://github.com/dulkarsamanvn)
+
+## 🆘 Support
+
+If you encounter any issues or have questions, please open an issue on GitHub or contact the development team.
