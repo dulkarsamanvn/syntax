@@ -57,6 +57,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room_id=self.scope['url_route']['kwargs']['room_id']
         self.room_group_name=f'chat_{self.room_id}'
 
+        user=self.scope.get('user')
+        if not user or not user.is_authenticated:
+            logger.warning(f"Unauthorized WebSocket connection attempt to room {self.room_id}")
+            await self.close()
+            return
+
         try:
             room=await sync_to_async(ChatRoom.objects.get)(id=self.room_id)
 

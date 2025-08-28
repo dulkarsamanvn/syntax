@@ -19,7 +19,35 @@ from django.db.models import Q
 from rest_framework.decorators import permission_classes
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
 
+
+
+def set_auth_cookies(response,access_token,refresh_token):
+
+    is_production=not settings.DEBUG
+
+    response.set_cookie(
+        key='access_token',
+        value=access_token,
+        httponly=True,
+        secure=is_production, 
+        samesite="None" if is_production else "Lax",
+        max_age=60 * 5, 
+        path='/'  
+    )
+    
+    
+    response.set_cookie(
+        key='refresh_token',
+        value=refresh_token,
+        httponly=True,
+        secure=is_production,  
+        samesite="None" if is_production else "Lax",
+        max_age=60 * 60 * 24 * 7,  
+        path='/'  
+    )
+    return response
 
 # Handles new user registration via email
 # Validates user input using SignupSerializer
@@ -86,22 +114,7 @@ class VerifyOTPView(APIView):
             refresh_token = str(refresh)
 
             response = JsonResponse({'message': 'OTP verified successfully and logged in'})
-            response.set_cookie(
-                key='access_token',
-                value=access_token,
-                httponly=True,
-                secure=False, 
-                samesite='Lax',
-                max_age=5 * 60  
-            )
-            response.set_cookie(
-                key='refresh_token',
-                value=refresh_token,
-                httponly=True,
-                secure=False,
-                samesite='Lax',
-                max_age=7 * 24 * 60 * 60 
-            )
+            response = set_auth_cookies(response, access_token, refresh_token)
 
             return response
         except User.DoesNotExist:
@@ -202,23 +215,7 @@ class LoginView(APIView):
         refresh_token=str(refresh)
 
         response=JsonResponse({'message':'Login successful','username':user.username})
-        response.set_cookie(
-            key='access_token',
-            value=access_token,
-            httponly=True,
-            secure=False,
-            samesite='Lax',
-            max_age=60 * 5
-        )
-        response.set_cookie(
-            key='refresh_token',
-            value=refresh_token,
-            httponly=True,
-            secure=False,
-            samesite='Lax',
-            max_age=60 * 60 * 24 * 7
-
-        )
+        response = set_auth_cookies(response, access_token, refresh_token)
         return response
 
 # -------------------------------------
@@ -230,9 +227,25 @@ class LoginView(APIView):
 class LogoutView(APIView):
     permission_classes=[]
     def post(self,request):
+        refresh_token=request.COOKIES.get('refresh_token')
+        if refresh_token:
+            try:
+                refresh=RefreshToken(refresh_token)
+                refresh.blacklist()
+            except TokenError:
+                pass
         response=JsonResponse({'message':'Logout Successful'})
-        response.delete_cookie('access_token')
-        response.delete_cookie('refresh_token')
+        is_production = not settings.DEBUG
+        response.delete_cookie(
+            'access_token',
+            path='/',
+            samesite="None" if is_production else "Lax",
+        )
+        response.delete_cookie(
+            'refresh_token',
+            path="/",
+            samesite="None" if is_production else "Lax",
+        )
         return response
     
 
@@ -249,17 +262,40 @@ class RefreshTokenView(APIView):
             return Response({'detail':'Refresh Token Missing'},status=status.HTTP_401_UNAUTHORIZED)
         try:
             refresh=RefreshToken(refresh_token)
-            access_token=str(refresh.access_token)
-            response=JsonResponse({'message':'Token Refreshed'})
+            user_id = refresh.payload.get('user_id')
+            if not user_id:
+                return Response(
+                    {'detail': 'Invalid token payload'}, 
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response(
+                    {'detail': 'User not found'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            if not user.is_active:
+                return Response(
+                    {'detail': 'User is inactive'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            new_access=str(refresh.access_token)
+            response = JsonResponse({'message': 'Token Refreshed'})
+            is_production = not settings.DEBUG
             response.set_cookie(
-                key='access_token',
-                value=access_token,
+                'access_token',
+                new_access,
                 httponly=True,
-                secure=False,
-                samesite='Lax',
-                max_age=60 * 5
+                secure=is_production,
+                samesite="None" if is_production else "Lax",
+                max_age=60*5,
+                path='/'
             )
             return response
+
         except TokenError:
             return Response({'detail':'Invalid refresh token'},status=status.HTTP_403_FORBIDDEN)
 
@@ -298,24 +334,7 @@ class GoogleLoginView(APIView):
             access_token=str(refresh.access_token)
             refresh_token=str(refresh)
             response=JsonResponse({'message': 'Login successful','username': user.username})
-
-            response.set_cookie(
-                key='access_token',
-                value=access_token,
-                httponly=True,
-                secure=False,
-                samesite='Lax',
-                max_age= 60 * 5
-
-            )
-            response.set_cookie(
-                key='refresh_token',
-                value=refresh_token,
-                httponly=True,
-                secure=False,
-                samesite='Lax',
-                max_age=60 * 60 * 24 * 7
-            )
+            response = set_auth_cookies(response, access_token, refresh_token)
             return response
         except ValueError as e:
             return Response({'error': 'Invalid token', 'details': str(e)},status=status.HTTP_400_BAD_REQUEST)
@@ -347,22 +366,7 @@ class AdminLoginView(APIView):
             'username':user.username,
             'email':user.email
         })
-        response.set_cookie(
-            key='access_token',
-            value=access_token,
-            httponly=True,
-            secure=False,
-            samesite='Lax',
-            max_age=60 * 5
-        )
-        response.set_cookie(
-            key='refresh_token',
-            value=refresh_token,
-            httponly=True,
-            secure=False,
-            samesite='Lax',
-            max_age=60 * 60 * 24 * 7
-        )
+        response = set_auth_cookies(response, access_token, refresh_token)
         return response
 
 
